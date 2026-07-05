@@ -2,7 +2,7 @@ import React from "react";
 
 type ButtonProps = {
       children: React.ReactNode;
-      variant?: "primary" | "secondary";
+      variant?: "primary" | "secondary" | "danger";
       size?: "sm" | "md" | "lg";
       className?: string;
 } & React.ButtonHTMLAttributes<HTMLButtonElement>;
@@ -19,14 +19,14 @@ const Button = ({
 
       const variants = {
             primary: "bg-white text-black shadow-[4px_4px_0px_var(--color-accent)] hover:shadow-[6px_6px_0px_var(--color-accent)] hover:-translate-x-0.5 hover:-translate-y-0.5 hover:text-black/80",
-
             secondary:
                   "border border-border bg-transparent text-white hover:bg-white/5 hover:-translate-y-0.5",
+            danger: "bg-red-500/50 text-white hover:bg-red-500 border border-red-500",
       };
 
       const sizes = {
             sm: "px-3 py-1.5 text-base",
-            md: "px-4 py-2 text-lg",
+            md: "px-4 py-1.5 text-lg",
             lg: "px-6 py-3 text-xl",
       };
 
