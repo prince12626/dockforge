@@ -59,7 +59,7 @@ export default function VpsPage() {
                                     {vps.map((server) => (
                                           <tr
                                                 key={server.id}
-                                                className="border-b border-border hover:bg-white/[0.02]"
+                                                className="border-b border-border hover:bg-white/2"
                                           >
                                                 <td className="p-4 font-medium">
                                                       {server.name}

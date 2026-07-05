@@ -47,7 +47,7 @@ export default function VpsDetailsPage() {
 
                   {/* Connection */}
 
-                  <section className="border border-border bg-white/[0.02]">
+                  <section className="border border-border bg-white/2">
                         <div className="border-b border-border p-6">
                               <h2 className="text-xl font-semibold">
                                     Connection
@@ -83,7 +83,7 @@ export default function VpsDetailsPage() {
 
                   {/* Quick Actions */}
 
-                  <section className="border border-border bg-white/[0.02]">
+                  <section className="border border-border bg-white/2">
                         <div className="border-b border-border p-6">
                               <h2 className="text-xl font-semibold">
                                     Quick Actions
@@ -110,7 +110,7 @@ export default function VpsDetailsPage() {
 
 function Card({ title, value }: { title: string; value: string }) {
       return (
-            <div className="border border-border bg-white/[0.02] p-6">
+            <div className="border border-border bg-white/2 p-6">
                   <p className="text-white/60">{title}</p>
 
                   <h3 className="mt-2 text-2xl font-semibold">{value}</h3>

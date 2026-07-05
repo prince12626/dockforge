@@ -12,7 +12,7 @@ export default function SettingsPage() {
                   </div>
 
                   {/* Profile */}
-                  <section className="border border-border bg-white/[0.02]">
+                  <section className="border border-border bg-white/2">
                         <div className="border-b border-border p-6">
                               <h2 className="text-xl font-semibold text-white">
                                     Profile
@@ -53,7 +53,7 @@ export default function SettingsPage() {
 
                   {/* Security */}
 
-                  <section className="border border-border bg-white/[0.02]">
+                  <section className="border border-border bg-white/2">
                         <div className="border-b border-border p-6">
                               <h2 className="text-xl font-semibold">
                                     Security
