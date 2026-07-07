@@ -1,5 +1,5 @@
 "use client";
-
+import { authClient } from "@/lib/auth-client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -54,7 +54,10 @@ const sections = [
 
 export default function Sidebar() {
       const pathname = usePathname();
-
+      const logout = async () => {
+            await authClient.signOut();
+            window.location.href = "/login";
+      };
       return (
             <aside className="flex fixed h-screen w-80 flex-col border-r border-border bg-background">
                   {/* Logo */}
@@ -162,6 +165,7 @@ export default function Sidebar() {
                         <Button
                               variant="danger"
                               size="md"
+                              onClick={logout}
                               className="mt-4 flex w-full items-center justify-center gap-2"
                         >
                               <LogOut size={17} />

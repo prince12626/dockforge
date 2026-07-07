@@ -1,7 +1,12 @@
-import Sidebar from "@/components/Sidebar";
+"use client";
 import Button from "@/components/ui/Button";
+import { authClient } from "@/lib/auth-client";
 
 export default function DashboardPage() {
+      const logout = async () => {
+            await authClient.signOut();
+            window.location.href = "/login";
+      };
       return (
             <main className="min-h-screen bg-background text-white">
                   <section className="flex-1 p-8">
@@ -22,7 +27,9 @@ export default function DashboardPage() {
                                                 alt="Profile Picture"
                                           />
                                     </div>
-                                    <Button variant="danger">Logout</Button>
+                                    <Button variant="danger" onClick={logout}>
+                                          Logout
+                                    </Button>
                               </div>
                         </div>
 
