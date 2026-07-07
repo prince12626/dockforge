@@ -3,7 +3,7 @@ import { CreateVpsPayload } from "@/types/vps.types";
 
 export const vpsService = {
       getAll: async () => {
-            const { data } = await axiosInstance.get("/vps");
+            const { data } = await axiosInstance.get("/vps/");
             return data;
       },
 
@@ -13,7 +13,7 @@ export const vpsService = {
       },
 
       create: async (payload: CreateVpsPayload) => {
-            const { data } = await axiosInstance.post("/vps", payload);
+            const { data } = await axiosInstance.post("/vps/", payload);
             return data;
       },
 
@@ -36,6 +36,7 @@ export const vpsService = {
             const { data } = await axiosInstance.get(`/vps/stats/${id}`);
             return data;
       },
+
       stop: async (id: string) => {
             const { data } = await axiosInstance.post(`/vps/${id}/stop`);
             return data;

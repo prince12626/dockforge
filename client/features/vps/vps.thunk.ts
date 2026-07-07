@@ -81,3 +81,14 @@ export const restartVps = createAsyncThunk(
             }
       },
 );
+
+export const getVpsStats = createAsyncThunk(
+      "vps/getStats",
+      async (id: string, thunkAPI) => {
+            try {
+                  return await vpsService.getStats(id);
+            } catch (error) {
+                  return thunkAPI.rejectWithValue(getErrorMessage(error));
+            }
+      },
+);

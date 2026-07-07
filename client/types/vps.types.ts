@@ -23,9 +23,12 @@ export interface VpsState {
 
 export interface CreateVpsPayload {
       name: string;
-      region: string;
-      image: string;
-      plan: string;
+      os: string;
+      resources: {
+            cpu: number;
+            memory: number;
+            storage: number;
+      };
 }
 
 export interface UpdateVpsPayload {
