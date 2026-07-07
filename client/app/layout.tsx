@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import { Elms_Sans } from "next/font/google";
 import "./globals.css";
+import StoreProvider from "@/store/StoreProvider";
+import NavbarWrapper from "@/components/NavbarWrapper";
+import { Toaster } from "sonner";
 
 export const metadata: Metadata = {
       title: "Hostinger | Prince Chaurasiya",
@@ -18,7 +21,12 @@ export default function RootLayout({
 }>) {
       return (
             <html lang="en" className={`${elms_sans.className} font-sans`}>
-                  <body className="min-h-full flex flex-col">{children}</body>
+                  <body className="min-h-full flex flex-col">
+                        <Toaster />
+                        <StoreProvider>
+                              <NavbarWrapper>{children}</NavbarWrapper>
+                        </StoreProvider>
+                  </body>
             </html>
       );
 }

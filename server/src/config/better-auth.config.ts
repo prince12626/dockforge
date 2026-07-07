@@ -12,5 +12,6 @@ export const auth = betterAuth({
       emailAndPassword: {
             enabled: true,
       },
+      trustedOrigins: ["http://localhost:4000"],
       appName: "Hostinger",
 });

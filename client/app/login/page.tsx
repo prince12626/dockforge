@@ -1,12 +1,61 @@
 "use client";
-
 import { Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { FormEvent, useState } from "react";
+import { toast } from "sonner";
+import { authClient } from "@/lib/auth-client";
 import Button from "@/components/ui/Button";
 
 export default function LoginPage() {
+      const router = useRouter();
+
+      const [email, setEmail] = useState("");
+      const [password, setPassword] = useState("");
       const [showPassword, setShowPassword] = useState(false);
+      const [isLoading, setIsLoading] = useState(false);
+
+      const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+            e.preventDefault();
+
+            if (isLoading) return;
+
+            const trimmedEmail = email.trim();
+
+            if (!trimmedEmail || !password) {
+                  toast.error("Please fill in all fields.");
+                  return;
+            }
+
+            if (!/\S+@\S+\.\S+/.test(trimmedEmail)) {
+                  toast.error("Please enter a valid email.");
+                  return;
+            }
+
+            try {
+                  setIsLoading(true);
+
+                  const { error } = await authClient.signIn.email({
+                        email: trimmedEmail,
+                        password,
+                  });
+
+                  if (error) {
+                        toast.error(error.message);
+                        return;
+                  }
+
+                  toast.success("Logged in successfully!");
+
+                  router.push("/dashboard");
+                  router.refresh();
+            } catch (err) {
+                  console.error(err);
+                  toast.error("Something went wrong. Please try again.");
+            } finally {
+                  setIsLoading(false);
+            }
+      };
 
       return (
             <main className="flex min-h-[calc(100vh-72px)] items-center justify-center px-6 py-12">
@@ -19,43 +68,69 @@ export default function LoginPage() {
                               Sign in to continue managing your VPS.
                         </p>
 
-                        <form className="mt-8 space-y-5">
+                        <form
+                              onSubmit={handleSubmit}
+                              className="mt-8 space-y-5"
+                        >
                               <div>
-                                    <label className="mb-2 block text-sm text-white/80">
+                                    <label
+                                          htmlFor="email"
+                                          className="mb-2 block text-sm text-white/80"
+                                    >
                                           Email
                                     </label>
 
                                     <input
+                                          id="email"
                                           type="email"
+                                          autoComplete="email"
                                           placeholder="you@example.com"
-                                          className="h-12 w-full border border-border bg-background px-4 text-white outline-none transition focus:border-accent"
+                                          value={email}
+                                          onChange={(e) =>
+                                                setEmail(e.target.value)
+                                          }
+                                          disabled={isLoading}
+                                          className="h-12 w-full border border-border bg-background px-4 text-white outline-none transition focus:border-accent disabled:cursor-not-allowed disabled:opacity-60"
                                     />
                               </div>
 
                               <div>
-                                    <label className="mb-2 block text-sm text-white/80">
+                                    <label
+                                          htmlFor="password"
+                                          className="mb-2 block text-sm text-white/80"
+                                    >
                                           Password
                                     </label>
 
                                     <div className="relative">
                                           <input
+                                                id="password"
                                                 type={
                                                       showPassword
                                                             ? "text"
                                                             : "password"
                                                 }
+                                                autoComplete="current-password"
                                                 placeholder="••••••••"
-                                                className="h-12 w-full border border-border bg-background px-4 pr-12 text-white outline-none transition focus:border-accent"
+                                                value={password}
+                                                onChange={(e) =>
+                                                      setPassword(
+                                                            e.target.value,
+                                                      )
+                                                }
+                                                disabled={isLoading}
+                                                className="h-12 w-full border border-border bg-background px-4 pr-12 text-white outline-none transition focus:border-accent disabled:cursor-not-allowed disabled:opacity-60"
                                           />
 
                                           <button
                                                 type="button"
                                                 onClick={() =>
                                                       setShowPassword(
-                                                            !showPassword,
+                                                            (prev) => !prev,
                                                       )
                                                 }
-                                                className="absolute right-4 top-1/2 -translate-y-1/2 text-white/60 transition hover:text-white"
+                                                disabled={isLoading}
+                                                className="absolute right-4 top-1/2 -translate-y-1/2 text-white/60 transition hover:text-white disabled:cursor-not-allowed"
                                           >
                                                 {showPassword ? (
                                                       <EyeOff size={20} />
@@ -65,11 +140,14 @@ export default function LoginPage() {
                                           </button>
                                     </div>
                               </div>
+
                               <Button
-                                    className="w-full justify-center"
+                                    type="submit"
                                     size="lg"
+                                    disabled={isLoading}
+                                    className="w-full justify-center"
                               >
-                                    Sign In
+                                    {isLoading ? "Signing In..." : "Sign In"}
                               </Button>
                         </form>
 

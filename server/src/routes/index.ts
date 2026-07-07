@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { auth } from "../config/better-auth.config.js";
 import { toNodeHandler } from "better-auth/node";
-import vpsRouter from "./vps.route";
+import vpsRouter from "./vps.route.js";
 
 const router = Router();
 
