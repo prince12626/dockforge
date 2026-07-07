@@ -1,5 +1,7 @@
-"use client";     
-import { Fragment } from "react";
+"use client";
+
+import { Fragment, useState } from "react";
+import Link from "next/link";
 import {
       Dialog,
       DialogPanel,
@@ -7,40 +9,58 @@ import {
       TransitionChild,
 } from "@headlessui/react";
 import { Menu, X } from "lucide-react";
-import { useState } from "react";
 import Button from "./ui/Button";
-
-const links = [
-      { name: "Features", href: "/features" },
-      { name: "Pricing", href: "/pricing" },
-      { name: "Login", href: "/login" },
-];
+import { authClient } from "@/lib/auth-client";
 
 const Navbar = () => {
       const [open, setOpen] = useState(false);
+
+      const { data: session, isPending } = authClient.useSession();
+
+      const navLinks = [
+            { name: "Features", href: "/features" },
+            { name: "Pricing", href: "/pricing" },
+            ...(session
+                  ? [{ name: "Dashboard", href: "/dashboard" }]
+                  : [{ name: "Login", href: "/login" }]),
+      ];
 
       return (
             <>
                   <header className="sticky top-0 z-50 w-full border-b border-border/60 bg-background/80 backdrop-blur-xl">
                         <div className="mx-auto flex h-18 items-center justify-between px-5 sm:px-8 lg:px-12">
-                              <h1 className="cursor-pointer text-2xl font-semibold tracking-tight text-white sm:text-3xl">
+                              <Link
+                                    href="/"
+                                    className="cursor-pointer text-2xl font-semibold tracking-tight text-white sm:text-3xl"
+                              >
                                     DockForge
-                              </h1>
+                              </Link>
 
                               <nav className="hidden items-center gap-8 lg:flex">
-                                    {links.map((link) => (
-                                          <a
+                                    {navLinks.map((link) => (
+                                          <Link
                                                 key={link.name}
                                                 href={link.href}
                                                 className="text-lg text-white/70 transition-all duration-200 hover:-translate-y-0.5 hover:text-white"
                                           >
                                                 {link.name}
-                                          </a>
+                                          </Link>
                                     ))}
                               </nav>
 
                               <div className="hidden lg:block">
-                                    <Button>Create Account</Button>
+                                    {!isPending &&
+                                          (session ? (
+                                                <Link href="/dashboard">
+                                                      <Button>Dashboard</Button>
+                                                </Link>
+                                          ) : (
+                                                <Link href="/register">
+                                                      <Button>
+                                                            Create Account
+                                                      </Button>
+                                                </Link>
+                                          ))}
                               </div>
 
                               <button
@@ -83,9 +103,17 @@ const Navbar = () => {
                                           >
                                                 <DialogPanel className="flex h-full w-80 flex-col border-l border-border bg-background p-6">
                                                       <div className="mb-10 flex items-center justify-between">
-                                                            <h2 className="text-2xl font-semibold text-white">
+                                                            <Link
+                                                                  href="/"
+                                                                  onClick={() =>
+                                                                        setOpen(
+                                                                              false,
+                                                                        )
+                                                                  }
+                                                                  className="text-2xl font-semibold text-white"
+                                                            >
                                                                   DockForge
-                                                            </h2>
+                                                            </Link>
 
                                                             <button
                                                                   onClick={() =>
@@ -104,9 +132,9 @@ const Navbar = () => {
                                                       </div>
 
                                                       <div className="flex flex-1 flex-col gap-6">
-                                                            {links.map(
+                                                            {navLinks.map(
                                                                   (link) => (
-                                                                        <a
+                                                                        <Link
                                                                               key={
                                                                                     link.name
                                                                               }
@@ -123,14 +151,40 @@ const Navbar = () => {
                                                                               {
                                                                                     link.name
                                                                               }
-                                                                        </a>
+                                                                        </Link>
                                                                   ),
                                                             )}
                                                       </div>
 
-                                                      <Button>
-                                                            Create Account
-                                                      </Button>
+                                                      {!isPending &&
+                                                            (session ? (
+                                                                  <Link
+                                                                        href="/dashboard"
+                                                                        onClick={() =>
+                                                                              setOpen(
+                                                                                    false,
+                                                                              )
+                                                                        }
+                                                                  >
+                                                                        <Button className="w-full">
+                                                                              Dashboard
+                                                                        </Button>
+                                                                  </Link>
+                                                            ) : (
+                                                                  <Link
+                                                                        href="/register"
+                                                                        onClick={() =>
+                                                                              setOpen(
+                                                                                    false,
+                                                                              )
+                                                                        }
+                                                                  >
+                                                                        <Button className="w-full">
+                                                                              Create
+                                                                              Account
+                                                                        </Button>
+                                                                  </Link>
+                                                            ))}
                                                 </DialogPanel>
                                           </TransitionChild>
                                     </div>
