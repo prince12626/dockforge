@@ -1,7 +1,7 @@
 export interface Vps {
       id: string;
       name: string;
-      status: "RUNNING" | "STOPPED" | "STARTING" | "STOPPING" | "RESTARTING";
+      status: "running" | "stopped" | "starting" | "stopping" | "restarting";
       ip: string;
       os: string;
       cpu: number;

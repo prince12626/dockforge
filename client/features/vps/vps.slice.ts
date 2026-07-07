@@ -106,7 +106,7 @@ const vpsSlice = createSlice({
                   })
                   .addCase(getAllVps.fulfilled, (state, action) => {
                         state.isLoading = false;
-                        state.list = action.payload;
+                        state.list = action.payload.data;
                   })
                   .addCase(getAllVps.rejected, (state, action) => {
                         state.isLoading = false;
