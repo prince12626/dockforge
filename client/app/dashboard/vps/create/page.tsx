@@ -6,6 +6,8 @@ import Image from "next/image";
 import Button from "@/components/ui/Button";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { createVps } from "@/features/vps/vps.thunk";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 const osOptions = [
       {
@@ -59,7 +61,7 @@ const CreateVPSPage = () => {
                   storage: 10,
             },
       });
-
+      const router = useRouter();
       const handleSubmit = async (e: React.FormEvent) => {
             e.preventDefault();
 
@@ -67,6 +69,10 @@ const CreateVPSPage = () => {
                   const response = await dispatch(createVps(formData)).unwrap();
 
                   console.log("VPS CREATED:", response);
+                  if (response.data) {
+                        toast.success("VPS Created!");
+                        router.push(`/dashboard/vps/${response.data._id}`);
+                  }
             } catch (error) {
                   console.error("CREATE VPS ERROR:", error);
             }

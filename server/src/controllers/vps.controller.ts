@@ -132,9 +132,10 @@ export const stopVps = async (req: Request, res: Response) => {
       try {
             const user = req.user!;
             const { id } = req.params as { id: string };
-            const stopped = await stopVpsService(user.id, id);
 
-            if (!stopped) {
+            const result = await stopVpsService(user.id, id);
+
+            if (!result) {
                   return res.status(404).json({
                         success: false,
                         message: "VPS not found",
@@ -144,9 +145,10 @@ export const stopVps = async (req: Request, res: Response) => {
             return res.json({
                   success: true,
                   message: "VPS stopped successfully",
+                  data: result,
             });
       } catch (error) {
-            console.error(error);
+            console.error("[STOP VPS]", error);
 
             return res.status(500).json({
                   success: false,
@@ -171,7 +173,7 @@ export const startVps = async (req: Request, res: Response) => {
             return res.json({
                   success: true,
                   message: "VPS started successfully",
-                  runtime: result,
+                  data: result,
             });
       } catch (error) {
             console.error("[START VPS]", error);

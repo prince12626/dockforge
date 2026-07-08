@@ -1,15 +1,21 @@
 "use client";
 
-import React, { useEffect } from "react";
+import { useEffect, useState } from "react";
 import Button from "@/components/ui/Button";
-import { getAllVps } from "@/features/vps/vps.thunk";
+import { getAllVps, startVps, stopVps } from "@/features/vps/vps.thunk";
 import { authClient } from "@/lib/auth-client";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { formatDistanceToNow, parseISO } from "date-fns";
+import { useRouter } from "next/navigation";
 
 export default function DashboardPage() {
       const dispatch = useAppDispatch();
+
       const { list, isLoading } = useAppSelector((state) => state.vps);
+
+      const router = useRouter();
+
+      const [actionLoading, setActionLoading] = useState<string | null>(null);
 
       useEffect(() => {
             dispatch(getAllVps());
@@ -20,15 +26,35 @@ export default function DashboardPage() {
             window.location.href = "/login";
       };
 
-      // Safe function to format date
       const formatRelativeDate = (dateString?: string) => {
             if (!dateString) return "Unknown";
+
             try {
                   return formatDistanceToNow(parseISO(dateString), {
                         addSuffix: true,
                   });
-            } catch (e) {
+            } catch {
                   return "Invalid date";
+            }
+      };
+
+      const handleStop = async (id: string) => {
+            try {
+                  setActionLoading(id);
+
+                  await dispatch(stopVps(id));
+            } finally {
+                  setActionLoading(null);
+            }
+      };
+
+      const handleStart = async (id: string) => {
+            try {
+                  setActionLoading(id);
+
+                  await dispatch(startVps(id));
+            } finally {
+                  setActionLoading(null);
             }
       };
 
@@ -40,6 +66,7 @@ export default function DashboardPage() {
                                     <h2 className="text-3xl font-semibold">
                                           Dashboard
                                     </h2>
+
                                     <p className="text-white/60 mt-1">
                                           Manage your VPS infrastructure
                                     </p>
@@ -52,6 +79,7 @@ export default function DashboardPage() {
                                                 alt="Profile"
                                           />
                                     </div>
+
                                     <Button variant="danger" onClick={logout}>
                                           Logout
                                     </Button>
@@ -61,28 +89,37 @@ export default function DashboardPage() {
                         <div className="grid grid-cols-3 gap-6 mt-10">
                               <div className="border border-border p-6 bg-white/5">
                                     <p className="text-white/60">Total VPS</p>
+
                                     <h3 className="text-3xl font-semibold mt-2">
-                                          {list?.length || 0}
+                                          {list.length}
                                     </h3>
                               </div>
 
                               <div className="border border-border p-6 bg-white/5">
                                     <p className="text-white/60">Running</p>
+
                                     <h3 className="text-3xl font-semibold mt-2 text-green-400">
-                                          {list?.filter(
-                                                (vps) =>
-                                                      vps.status === "running",
-                                          ).length || 0}
+                                          {
+                                                list.filter(
+                                                      (vps) =>
+                                                            vps.status ===
+                                                            "running",
+                                                ).length
+                                          }
                                     </h3>
                               </div>
 
                               <div className="border border-border p-6 bg-white/5">
                                     <p className="text-white/60">Stopped</p>
+
                                     <h3 className="text-3xl font-semibold mt-2 text-red-400">
-                                          {list?.filter(
-                                                (vps) =>
-                                                      vps.status === "stopped",
-                                          ).length || 0}
+                                          {
+                                                list.filter(
+                                                      (vps) =>
+                                                            vps.status ===
+                                                            "stopped",
+                                                ).length
+                                          }
                                     </h3>
                               </div>
                         </div>
@@ -92,6 +129,7 @@ export default function DashboardPage() {
                                     <h3 className="text-xl font-semibold">
                                           Your VPS
                                     </h3>
+
                                     <button className="px-4 py-2 border border-border hover:bg-white/5">
                                           + Create VPS
                                     </button>
@@ -110,12 +148,20 @@ export default function DashboardPage() {
                                                 Loading your infrastructure...
                                           </div>
                                     ) : (
-                                          list?.map((vps, index) => (
+                                          list.map((vps) => (
                                                 <div
-                                                      key={index}
-                                                      className="grid grid-cols-4 p-4 border-b border-border hover:bg-white/5 transition-colors"
+                                                      key={vps._id}
+                                                      onClick={() =>
+                                                            router.push(
+                                                                  `/dashboard/vps/${vps._id}`,
+                                                            )
+                                                      }
+                                                      className="grid grid-cols-4 items-center p-4 border-b border-border hover:bg-white/5 transition-colors"
                                                 >
-                                                      <span>{vps.name}</span>
+                                                      <span className="text-xl font-semibold">
+                                                            {vps.name}
+                                                      </span>
+
                                                       <span
                                                             className={
                                                                   vps.status ===
@@ -126,18 +172,69 @@ export default function DashboardPage() {
                                                       >
                                                             {vps.status}
                                                       </span>
+
                                                       <span className="text-white/60">
                                                             {formatRelativeDate(
                                                                   vps.createdAt,
                                                             )}
                                                       </span>
+
                                                       <div className="flex gap-2">
-                                                            <button className="px-2 py-1 border border-border text-xs hover:bg-white/5">
+                                                            <button
+                                                                  onClick={(
+                                                                        e,
+                                                                  ) =>
+                                                                        e.stopPropagation()
+                                                                  }
+                                                                  className="px-3 py-1.5 border border-border text-sm hover:bg-white/5"
+                                                            >
                                                                   Open
                                                             </button>
-                                                            <button className="px-2 py-1 border border-border text-xs hover:bg-white/5">
-                                                                  Start
-                                                            </button>
+
+                                                            {vps.status ===
+                                                            "running" ? (
+                                                                  <button
+                                                                        onClick={(
+                                                                              e,
+                                                                        ) => {
+                                                                              e.stopPropagation();
+                                                                              handleStop(
+                                                                                    vps._id,
+                                                                              );
+                                                                        }}
+                                                                        disabled={
+                                                                              actionLoading ===
+                                                                              vps._id
+                                                                        }
+                                                                        className="px-3 py-1.5 border border-border text-sm hover:bg-white/5 disabled:opacity-50 disabled:cursor-not-allowed"
+                                                                  >
+                                                                        {actionLoading ===
+                                                                        vps._id
+                                                                              ? "Stopping..."
+                                                                              : "Stop"}
+                                                                  </button>
+                                                            ) : (
+                                                                  <button
+                                                                        onClick={(
+                                                                              e,
+                                                                        ) => {
+                                                                              e.stopPropagation();
+                                                                              handleStart(
+                                                                                    vps._id,
+                                                                              );
+                                                                        }}
+                                                                        disabled={
+                                                                              actionLoading ===
+                                                                              vps._id
+                                                                        }
+                                                                        className="px-3 py-1.5 border border-border text-sm hover:bg-white/5 disabled:opacity-50 disabled:cursor-not-allowed"
+                                                                  >
+                                                                        {actionLoading ===
+                                                                        vps._id
+                                                                              ? "Starting..."
+                                                                              : "Start"}
+                                                                  </button>
+                                                            )}
                                                       </div>
                                                 </div>
                                           ))
@@ -148,4 +245,3 @@ export default function DashboardPage() {
             </main>
       );
 }
-      

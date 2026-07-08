@@ -168,16 +168,20 @@ export async function stopVpsService(userId: string, vpsId: string) {
 
       await stopContainer(vps.container.id);
 
-      await VPS.updateOne(
+      const updatedVps = await VPS.findOneAndUpdate(
             {
                   _id: vpsId,
+                  userId,
             },
             {
                   status: "stopped",
             },
+            {
+                  new: true,
+            },
       );
 
-      return true;
+      return updatedVps;
 }
 
 export async function startVpsService(userId: string, vpsId: string) {
@@ -189,16 +193,20 @@ export async function startVpsService(userId: string, vpsId: string) {
             throw new Error("Container not found");
       }
       const inspect = await startContainer(vps.container.id);
-      await VPS.updateOne(
+      const updatedVps = await VPS.findOneAndUpdate(
             {
                   _id: vpsId,
+                  userId,
             },
             {
                   status: inspect.State.Status,
                   lastStartedAt: new Date(),
             },
+            {
+                  new: true,
+            },
       );
-      return inspect.State;
+      return updatedVps;
 }
 
 export async function restartVpsService(userId: string, vpsId: string) {
