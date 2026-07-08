@@ -23,9 +23,7 @@ export default function AppTerminal() {
                   theme: {
                         background: "#09090B",
                         foreground: "#FAFAFA",
-
                         cursor: "#D8FF3E",
-
                         selectionBackground: "#3F3F46",
                   },
             });
@@ -38,10 +36,6 @@ export default function AppTerminal() {
 
             fitAddon.fit();
 
-            terminal.writeln("");
-            terminal.writeln("DockForge Terminal");
-            terminal.writeln("------------------------------");
-            terminal.writeln("");
             terminal.write("root@production:~$ ");
 
             const resize = () => fitAddon.fit();
@@ -56,7 +50,10 @@ export default function AppTerminal() {
 
       return (
             <div className="flex flex-1 overflow-hidden">
-                  <div ref={terminalRef} className="h-full w-full p-4" />
+                  <div
+                        ref={terminalRef}
+                        className="h-full w-full p-4 overflow-hidden"
+                  />
             </div>
       );
 }

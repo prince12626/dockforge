@@ -4,11 +4,12 @@ import Button from "@/components/ui/Button";
 import { getVpsById } from "@/features/vps/vps.thunk";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { RotateCcw, Square, Trash2, ExternalLink } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
 const VPSDetails = ({ id }: { id: string }) => {
       const dispatch = useAppDispatch();
-
+      const router = useRouter();
       const { selected } = useAppSelector((state) => state.vps);
 
       useEffect(() => {
@@ -42,7 +43,15 @@ const VPSDetails = ({ id }: { id: string }) => {
                         </div>
 
                         <div className="flex gap-3">
-                              <Button>Open Terminal</Button>
+                              <Button
+                                    onClick={() => {
+                                          router.push(
+                                                `/dashboard/vps/${selected._id}/terminal`,
+                                          );
+                                    }}
+                              >
+                                    Open Terminal
+                              </Button>
 
                               <button className="border border-border px-4 py-2 hover:border-accent">
                                     <RotateCcw size={18} />
