@@ -69,7 +69,7 @@ const VPSDetails = ({ id }: { id: string }) => {
                         <Card
                               title="Status"
                               value={
-                                    selected.runtime.running
+                                    selected.runtime?.running
                                           ? "🟢 Running"
                                           : "🔴 Stopped"
                               }
@@ -121,7 +121,7 @@ const VPSDetails = ({ id }: { id: string }) => {
                               <p className="text-white/60">Process ID</p>
 
                               <h3 className="mt-3 text-3xl font-semibold">
-                                    {selected.runtime.pid}
+                                    {selected.runtime?.pid}
                               </h3>
                         </div>
 
@@ -130,7 +130,7 @@ const VPSDetails = ({ id }: { id: string }) => {
 
                               <h3 className="mt-3 text-xl font-semibold">
                                     {new Date(
-                                          selected.runtime.startedAt,
+                                          selected.runtime?.startedAt,
                                     ).toLocaleString()}
                               </h3>
                         </div>
