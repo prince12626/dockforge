@@ -14,3 +14,12 @@ html {
       color: white;
       font-family: var(--font-sans);
 }
+
+.xterm .xterm-viewport::-webkit-scrollbar {
+      display: none;
+}
+
+.xterm .xterm-viewport {
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+}

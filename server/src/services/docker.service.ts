@@ -34,9 +34,8 @@ export async function createContainer({
                         Name: "unless-stopped",
                   },
 
-                  CapDrop: ["ALL"],
-
-                  SecurityOpt: ["no-new-privileges"],
+                  // VPS users need normal root capabilities
+                  CapDrop: ["NET_RAW"],
             },
       };
 

@@ -130,9 +130,9 @@ export default function DashboardPage() {
                                           Your VPS
                                     </h3>
 
-                                    <button className="px-4 py-2 border border-border hover:bg-white/5">
+                                    <Button variant="secondary">
                                           + Create VPS
-                                    </button>
+                                    </Button>
                               </div>
 
                               <div className="mt-6 border border-border">
@@ -142,7 +142,31 @@ export default function DashboardPage() {
                                           <span>Created</span>
                                           <span>Actions</span>
                                     </div>
+                                    {list.length === 0 && (
+                                          <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-zinc-800 bg-zinc-900/50 p-10 text-center">
+                                                <h2 className="text-xl font-semibold text-white">
+                                                      No VPS found
+                                                </h2>
 
+                                                <p className="mt-2 max-w-sm text-sm text-zinc-400">
+                                                      You don't have any VPS
+                                                      yet. Create your first VPS
+                                                      and start deploying your
+                                                      applications instantly.
+                                                </p>
+
+                                                <Button
+                                                      onClick={() =>
+                                                            router.push(
+                                                                  "/dashboard/vps/create",
+                                                            )
+                                                      }
+                                                      className="mt-5"
+                                                >
+                                                      Create VPS
+                                                </Button>
+                                          </div>
+                                    )}{" "}
                                     {isLoading ? (
                                           <div className="p-4 text-center">
                                                 Loading your infrastructure...

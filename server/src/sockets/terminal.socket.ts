@@ -3,109 +3,76 @@ import * as pty from "node-pty";
 import { VPS } from "../models/vps.model.js";
 import { auth } from "../config/better-auth.config.js";
 
-export function setupTerminalSocket(io: Server) {
-      console.log("🚀 Setting up terminal namespace");
+interface TerminalSocketData {
+      userId: string;
+      containerId: string;
+}
 
+const activeTerminals = new Map<string, pty.IPty>();
+
+export function setupTerminalSocket(io: Server) {
       const terminal = io.of("/terminal");
 
       terminal.use(async (socket, next) => {
-            console.log("\n==============================");
-            console.log("🔌 TERMINAL MIDDLEWARE START");
-            console.log("==============================");
-
             try {
-                  console.log("Handshake query:", socket.handshake.query);
-
-                  console.log(
-                        "Handshake headers cookie:",
-                        socket.handshake.headers.cookie,
-                  );
-
-                  const headers = new Headers();
-
                   const cookie = socket.handshake.headers.cookie;
 
-                  if (cookie) {
-                        headers.set("cookie", cookie);
+                  if (!cookie) {
+                        return next(new Error("Unauthorized"));
                   }
 
-                  console.log("Checking Better Auth session...");
+                  const headers = new Headers();
+                  headers.set("cookie", cookie);
 
                   const session = await auth.api.getSession({
                         headers,
                   });
 
-                  console.log("SESSION:", session);
-
                   if (!session) {
-                        console.log("❌ No session");
-
                         return next(new Error("Unauthorized"));
                   }
 
-                  socket.data.userId = session.user.id;
+                  const vpsId = socket.handshake.query.vpsId;
 
-                  console.log("USER ID:", socket.data.userId);
-
-                  const vpsId = socket.handshake.query.vpsId as string;
-
-                  console.log("VPS ID:", vpsId);
-
-                  if (!vpsId) {
-                        console.log("❌ VPS ID missing");
-
-                        return next(new Error("VPS missing"));
+                  if (typeof vpsId !== "string") {
+                        return next(new Error("Invalid VPS"));
                   }
-
-                  console.log("Searching VPS...");
 
                   const vps = await VPS.findOne({
                         "container.id": vpsId,
                         userId: session.user.id,
-                  });
+                  })
+                        .select("container.id")
+                        .lean();
 
-                  console.log("FOUND VPS:", vps);
-
-                  if (!vps) {
-                        console.log("❌ VPS ownership failed");
-
-                        return next(new Error("VPS not owned"));
+                  if (!vps?.container?.id) {
+                        return next(new Error("VPS not found"));
                   }
 
-                  socket.data.vps = vps.container?.id;
-
-                  console.log("CONTAINER ID:", socket.data.vps);
-
-                  if (!socket.data.vps) {
-                        console.log("❌ Container ID missing");
-
-                        return next(new Error("Container missing"));
-                  }
-
-                  console.log("✅ Middleware success");
+                  socket.data = {
+                        userId: session.user.id,
+                        containerId: vps.container.id,
+                  } as TerminalSocketData;
 
                   next();
             } catch (error) {
-                  console.log("🔥 MIDDLEWARE ERROR:", error);
-
-                  next(new Error("Terminal auth failed"));
+                  next(new Error("Authentication failed"));
             }
       });
 
       terminal.on("connection", (socket: Socket) => {
-            console.log("\n==============================");
-            console.log("🔥 TERMINAL CONNECTED");
-            console.log("==============================");
+            const { containerId } = socket.data as TerminalSocketData;
 
-            const containerId = socket.data.vps;
+            const existing = activeTerminals.get(containerId);
 
-            console.log("Container:", containerId);
+            if (existing) {
+                  existing.kill();
+                  activeTerminals.delete(containerId);
+            }
 
-            let shell;
+            let shell: pty.IPty;
 
             try {
-                  console.log("Starting PTY...");
-
                   shell = pty.spawn(
                         "docker",
                         ["exec", "-it", containerId, "/bin/bash"],
@@ -120,45 +87,42 @@ export function setupTerminalSocket(io: Server) {
                         },
                   );
 
-                  console.log("✅ PTY CREATED");
+                  activeTerminals.set(containerId, shell);
             } catch (error) {
-                  console.log("🔥 PTY ERROR:", error);
-
-                  socket.emit("terminal-output", "\r\nPTY ERROR\r\n");
-
+                  socket.emit(
+                        "terminal-output",
+                        "\r\nTerminal unavailable\r\n",
+                  );
                   return;
             }
 
             shell.onData((data) => {
-                  console.log("SHELL OUTPUT:", data);
-
                   socket.emit("terminal-output", data);
             });
 
-            shell.onExit((code) => {
-                  console.log("SHELL EXIT:", code);
+            shell.onExit(() => {
+                  activeTerminals.delete(containerId);
+                  socket.disconnect();
             });
 
-            socket.on("terminal-input", (data) => {
-                  console.log("INPUT:", JSON.stringify(data));
-
-                  shell.write(data);
+            socket.on("terminal-input", (data: string) => {
+                  if (typeof data !== "string") return;
+                  shell.write(data.replace(/\r/g, "\n"));
             });
 
             socket.on("terminal-resize", ({ cols, rows }) => {
-                  console.log("RESIZE:", cols, rows);
-
-                  try {
+                  if (cols > 0 && rows > 0) {
                         shell.resize(cols, rows);
-                  } catch (e) {}
+                  }
             });
 
-            socket.on("disconnect", (reason) => {
-                  console.log("TERMINAL DISCONNECTED:", reason);
+            socket.on("disconnect", () => {
+                  const active = activeTerminals.get(containerId);
 
-                  try {
-                        shell.kill();
-                  } catch (e) {}
+                  if (active) {
+                        active.kill();
+                        activeTerminals.delete(containerId);
+                  }
             });
       });
 }
