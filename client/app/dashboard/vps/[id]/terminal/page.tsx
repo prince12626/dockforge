@@ -1,8 +1,12 @@
 "use client";
-import AppTerminal from "@/components/terminal/Terminal";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import type { RootState } from "@/store/store";
+import dynamic from "next/dynamic";
 
+const TerminalComponent = dynamic(
+      () => import("@/components/terminal/Terminal"),
+      { ssr: false },
+);
 export default function TerminalPage() {
       const { selected } = useAppSelector((state: RootState) => state.vps);
       const dispatch = useAppDispatch();
@@ -15,8 +19,9 @@ export default function TerminalPage() {
 
                         <p className="mt-1 text-white/60">Browser Terminal</p>
                   </div>
-
-                  <AppTerminal />
+                  <TerminalComponent
+                        vpsId={selected?.container.id ?? ""}
+                  />{" "}
             </main>
       );
 }

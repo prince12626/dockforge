@@ -1,46 +1,55 @@
 import { Server } from "socket.io";
 import type { Server as HttpServer } from "node:http";
-
-const userSocketMap = new Map<string, string>();
+import { auth } from "../config/better-auth.config.js";
+import { setupTerminalSocket } from "./terminal.socket.js";
 
 export let io: Server;
 
 export function initializeSocket(server: HttpServer) {
       io = new Server(server, {
             cors: {
-                  origin: process.env.CLIENT_URL,
-                  methods: ["GET", "POST"],
+                  origin: "http://localhost:4000",
                   credentials: true,
             },
-            connectTimeout: 5000,
       });
 
-      io.use((socket, next) => {
-            const userId = socket.handshake.auth.userId;
-            const token = socket.handshake.auth.token;
+      io.use(async (socket, next) => {
+            try {
+                  const headers = new Headers();
 
-            if (!userId || !isValidToken(token)) {
-                  return next(new Error("Authentication error"));
+                  const cookie = socket.handshake.headers.cookie;
+
+                  if (cookie) {
+                        headers.set("cookie", cookie);
+                  }
+
+                  const session = await auth.api.getSession({
+                        headers,
+                  });
+
+                  if (!session) {
+                        return next(new Error("Unauthorized"));
+                  }
+
+                  socket.data.userId = session.user.id;
+
+                  next();
+            } catch (error) {
+                  console.log(error);
+
+                  next(new Error("Authentication failed"));
             }
-
-            socket.data.userId = userId;
-            next();
       });
+
+      setupTerminalSocket(io);
 
       io.on("connection", (socket) => {
-            const userId = socket.data.userId;
-            userSocketMap.set(userId, socket.id);
-            console.log(`User ${userId} connected with socket ${socket.id}`);
+            console.log("Socket connected:", socket.data.userId);
 
             socket.on("disconnect", () => {
-                  userSocketMap.delete(userId);
-                  console.log(`User ${userId} disconnected`);
+                  console.log("Socket disconnected:", socket.id);
             });
       });
 
       return io;
-}
-
-function isValidToken(token: string): boolean {
-      return !!token;
 }

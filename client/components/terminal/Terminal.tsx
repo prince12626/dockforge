@@ -3,57 +3,70 @@
 import { useEffect, useRef } from "react";
 
 import { Terminal } from "xterm";
+
 import { FitAddon } from "@xterm/addon-fit";
+
+import { io } from "socket.io-client";
 
 import "xterm/css/xterm.css";
 
-export default function AppTerminal() {
-      const terminalRef = useRef<HTMLDivElement>(null);
+export default function TerminalComponent({ vpsId }: { vpsId: string }) {
+      const ref = useRef<HTMLDivElement>(null);
 
       useEffect(() => {
-            if (!terminalRef.current) return;
+            if (!ref.current || !vpsId) return;
 
             const terminal = new Terminal({
                   cursorBlink: true,
-
-                  fontFamily: "JetBrains Mono, monospace",
-
                   fontSize: 14,
-
                   theme: {
-                        background: "#09090B",
-                        foreground: "#FAFAFA",
-                        cursor: "#D8FF3E",
-                        selectionBackground: "#3F3F46",
+                        background: "#0c0c0c",
+                        foreground: "#fff",
                   },
             });
 
-            const fitAddon = new FitAddon();
+            const fit = new FitAddon();
 
-            terminal.loadAddon(fitAddon);
+            terminal.loadAddon(fit);
 
-            terminal.open(terminalRef.current);
+            terminal.open(ref.current);
 
-            fitAddon.fit();
+            fit.fit();
 
-            terminal.write("root@production:~$ ");
+            const socket = io("http://localhost:3000/terminal", {
+                  withCredentials: true,
+                  query: {
+                        vpsId,
+                  },
+            });
 
-            const resize = () => fitAddon.fit();
+            socket.on("connect", () => {
+                  console.log("terminal connected");
+            });
 
-            window.addEventListener("resize", resize);
+            socket.on("terminal-output", (data) => {
+                  terminal.write(data);
+            });
+
+            terminal.onData((data) => {
+                  socket.emit("terminal-input", data);
+            });
+
+            window.addEventListener("resize", () => {
+                  fit.fit();
+
+                  socket.emit("terminal-resize", {
+                        cols: terminal.cols,
+                        rows: terminal.rows,
+                  });
+            });
 
             return () => {
-                  window.removeEventListener("resize", resize);
+                  socket.disconnect();
+
                   terminal.dispose();
             };
-      }, []);
+      }, [vpsId]);
 
-      return (
-            <div className="flex flex-1 overflow-hidden">
-                  <div
-                        ref={terminalRef}
-                        className="h-full w-full p-4 overflow-hidden"
-                  />
-            </div>
-      );
+      return <div ref={ref} className="h-full w-full" />;
 }
