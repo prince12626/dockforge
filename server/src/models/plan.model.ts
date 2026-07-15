@@ -11,7 +11,15 @@ const planSchema = new Schema(
                   type: Number,
                   required: true,
             },
+            description: {
+                  type: String,
+                  default: "",
+            },
 
+            featured: {
+                  type: Boolean,
+                  default: false,
+            },
             cpu: {
                   type: Number,
                   required: true,

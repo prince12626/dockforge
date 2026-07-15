@@ -21,7 +21,7 @@ const VPSDetails = ({ id }: { id: string }) => {
       }
 
       const memoryGB = (selected.resources.memory / 1024).toFixed(1);
-
+      console.log(selected);
       return (
             <main className="space-y-8 p-8">
                   {/* Header */}

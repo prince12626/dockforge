@@ -5,6 +5,7 @@ import StoreProvider from "@/store/StoreProvider";
 import NavbarWrapper from "@/components/NavbarWrapper";
 import { Toaster } from "sonner";
 import { SocketProvider } from "@/context/SocketContext";
+import Script from "next/script";
 
 export const metadata: Metadata = {
       title: "Hostinger | Prince Chaurasiya",
@@ -27,6 +28,7 @@ export default function RootLayout({
                               <body className="min-h-full flex flex-col">
                                     <Toaster />
                                     <NavbarWrapper>{children}</NavbarWrapper>
+                                    <Script src="https://checkout.razorpay.com/v1/checkout.js" />
                               </body>
                         </SocketProvider>
                   </StoreProvider>
