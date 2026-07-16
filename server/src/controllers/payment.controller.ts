@@ -2,14 +2,13 @@ import type { Request, Response } from "express";
 
 import * as paymentService from "../services/payment.service.js";
 import * as subscriptionService from "../services/subscription.service.js";
+import { asyncHandler } from "../utils/async-handler.util.js";
+import { AppError } from "../utils/app-error.util.js";
 
-export async function verifyPayment(req: Request, res: Response) {
-      try {
+export const verifyPayment = asyncHandler(
+      async (req: Request, res: Response): Promise<void> => {
             if (!req.user) {
-                  return res.status(401).json({
-                        success: false,
-                        message: "Unauthorized",
-                  });
+                  throw new AppError("Unauthorized", 401);
             }
 
             const {
@@ -23,28 +22,19 @@ export async function verifyPayment(req: Request, res: Response) {
                   !razorpay_payment_id ||
                   !razorpay_signature
             ) {
-                  return res.status(400).json({
-                        success: false,
-                        message: "Missing payment details.",
-                  });
+                  throw new AppError("Missing payment details.", 400);
             }
 
             const payment =
                   await paymentService.getPendingPayment(razorpay_order_id);
 
             if (!payment) {
-                  return res.status(404).json({
-                        success: false,
-                        message: "Pending payment not found.",
-                  });
+                  throw new AppError("Pending payment not found.", 404);
             }
 
             // Prevent verifying another user's payment
             if (payment.userId !== req.user.id) {
-                  return res.status(403).json({
-                        success: false,
-                        message: "Forbidden.",
-                  });
+                  throw new AppError("Forbidden.", 403);
             }
 
             const verified = paymentService.verifySignature(
@@ -55,11 +45,7 @@ export async function verifyPayment(req: Request, res: Response) {
 
             if (!verified) {
                   await paymentService.markPaymentFailed(payment._id);
-
-                  return res.status(400).json({
-                        success: false,
-                        message: "Payment verification failed.",
-                  });
+                  throw new AppError("Payment verification failed.", 400);
             }
 
             await paymentService.markPaymentSuccess({
@@ -77,16 +63,9 @@ export async function verifyPayment(req: Request, res: Response) {
                   expiresAt,
             });
 
-            return res.status(200).json({
+            res.status(200).json({
                   success: true,
                   message: "Payment verified successfully.",
             });
-      } catch (error) {
-            console.error(error);
-
-            return res.status(500).json({
-                  success: false,
-                  message: "Internal Server Error",
-            });
-      }
-}
+      },
+);

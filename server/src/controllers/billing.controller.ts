@@ -1,8 +1,9 @@
 import type { Request, Response } from "express";
 import { getBillingOverviewService } from "../services/billing.service.js";
+import { asyncHandler } from "../utils/async-handler.util.js";
 
-export const getBillingOverview = async (req: Request, res: Response) => {
-      try {
+export const getBillingOverview = asyncHandler(
+      async (req: Request, res: Response) => {
             const user = req.user!;
 
             const billing = await getBillingOverviewService(user.id);
@@ -11,12 +12,5 @@ export const getBillingOverview = async (req: Request, res: Response) => {
                   success: true,
                   data: billing,
             });
-      } catch (error) {
-            console.error("[GET BILLING]", error);
-
-            return res.status(500).json({
-                  success: false,
-                  message: "Internal server error",
-            });
-      }
-};
+      },
+);

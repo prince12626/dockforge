@@ -5,14 +5,13 @@ import * as planService from "../services/plan.service.js";
 import * as paymentService from "../services/payment.service.js";
 import * as subscriptionService from "../services/subscription.service.js";
 import { Payment } from "../models/payment.model.js";
+import { asyncHandler } from "../utils/async-handler.util.js";
+import { AppError } from "../utils/app-error.util.js";
 
-export async function selectPlan(req: Request, res: Response) {
-      try {
+export const selectPlan = asyncHandler(
+      async (req: Request, res: Response): Promise<void> => {
             if (!req.user) {
-                  return res.status(401).json({
-                        success: false,
-                        message: "Login or Sign up first!",
-                  });
+                  throw new AppError("Login or Sign up first!", 401);
             }
 
             const planId = req.params.planId as string;
@@ -21,10 +20,7 @@ export async function selectPlan(req: Request, res: Response) {
             const plan = await planService.getPlanById(planId);
 
             if (!plan) {
-                  return res.status(404).json({
-                        success: false,
-                        message: "Plan not found.",
-                  });
+                  throw new AppError("Plan not found.", 404);
             }
 
             // FREE PLAN
@@ -37,21 +33,26 @@ export async function selectPlan(req: Request, res: Response) {
                         expiresAt,
                   });
 
-                  return res.status(200).json({
+                  res.status(200).json({
                         success: true,
                         message: "Free trial activated successfully.",
                   });
+                  return;
             }
+
             console.log(userId);
+
             // PAID PLAN
             const order = await paymentService.createOrder({
                   amount: plan.price,
                   receipt: `p_${Date.now()}`,
             });
+
             await Payment.deleteMany({
                   userId,
                   status: "pending",
             });
+
             // Save pending payment
             await paymentService.createPendingPayment({
                   userId,
@@ -61,27 +62,20 @@ export async function selectPlan(req: Request, res: Response) {
                   amount: plan.price,
             });
 
-            return res.status(200).json({
+            res.status(200).json({
                   success: true,
                   paymentRequired: true,
                   key: process.env.RAZORPAY_API_KEY,
                   order,
             });
-      } catch (error) {
-            console.error(error);
+      },
+);
 
-            return res.status(500).json({
-                  success: false,
-                  message: "Internal Server Error",
-            });
-      }
-}
-
-export async function fetchPlans(req: Request, res: Response) {
-      try {
+export const fetchPlans = asyncHandler(
+      async (req: Request, res: Response): Promise<void> => {
             const plans = await planService.getPlans();
-            return res.json({
+            res.json({
                   data: plans,
             });
-      } catch (error) {}
-}
+      },
+);

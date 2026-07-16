@@ -10,33 +10,29 @@ import { getDockerImage } from "../constants/docker-images.js";
 import { createVpsService } from "../services/vps.service.js";
 import { Types } from "mongoose";
 import { stopVpsService } from "../services/vps.service.js";
+import { asyncHandler } from "../utils/async-handler.util.js";
+import { AppError } from "../utils/app-error.util.js";
 
-export const createVps = async (req: Request, res: Response) => {
-      try {
+export const createVps = asyncHandler(
+      async (req: Request, res: Response): Promise<void> => {
             const { name, os, resources } = req.body;
             const user = req.user;
 
             if (!user) {
-                  return res.status(401).json({
-                        success: false,
-                        message: "Unauthorized",
-                  });
+                  throw new AppError("Unauthorized", 401);
             }
 
             if (!name || !os || !resources) {
-                  return res.status(400).json({
-                        success: false,
-                        message: "Missing required fields",
-                  });
+                  throw new AppError("Missing required fields", 400);
             }
 
             const subscription = req.subscription;
 
             if (!subscription || subscription.status !== "active") {
-                  return res.status(403).json({
-                        success: false,
-                        message: "You need an active subscription to create a VPS.",
-                  });
+                  throw new AppError(
+                        "You need an active subscription to create a VPS.",
+                        403,
+                  );
             }
 
             const plan = subscription.planId;
@@ -44,19 +40,16 @@ export const createVps = async (req: Request, res: Response) => {
             const userVps = await getUserVpsService(user.id);
 
             if (userVps.length >= plan.maxVps) {
-                  return res.status(403).json({
-                        success: false,
-                        message: `Your ${plan.name} plan allows a maximum of ${plan.maxVps} VPS.`,
-                  });
+                  throw new AppError(
+                        `Your ${plan.name} plan allows a maximum of ${plan.maxVps} VPS.`,
+                        403,
+                  );
             }
 
             const image = getDockerImage(os);
 
             if (!image) {
-                  return res.status(400).json({
-                        success: false,
-                        message: "Invalid operating system.",
-                  });
+                  throw new AppError("Invalid operating system.", 400);
             }
 
             // Optional: Prevent requesting resources above the plan
@@ -65,10 +58,10 @@ export const createVps = async (req: Request, res: Response) => {
                   resources.memory > plan.memory * 1024 ||
                   resources.storage > plan.storage
             ) {
-                  return res.status(400).json({
-                        success: false,
-                        message: "Requested resources exceed your current plan limits.",
-                  });
+                  throw new AppError(
+                        "Requested resources exceed your current plan limits.",
+                        400,
+                  );
             }
 
             const vps = await createVpsService({
@@ -82,186 +75,119 @@ export const createVps = async (req: Request, res: Response) => {
                   },
             });
 
-            return res.status(201).json({
+            res.status(201).json({
                   success: true,
                   message: "VPS created successfully.",
                   data: vps,
             });
-      } catch (error) {
-            console.error("[CREATE VPS]", error);
+      },
+);
 
-            return res.status(500).json({
-                  success: false,
-                  message: "Internal server error.",
-            });
-      }
-};
-
-export const getMyVps = async (req: Request, res: Response) => {
-      try {
+export const getMyVps = asyncHandler(
+      async (req: Request, res: Response): Promise<void> => {
             const user = req.user!;
 
             const vps = await getUserVpsService(user.id);
 
-            return res.status(200).json({
+            res.status(200).json({
                   success: true,
                   count: vps.length,
                   data: vps,
             });
-      } catch (error) {
-            console.error("[ERROR] GET USER VPS:", error);
+      },
+);
 
-            return res.status(500).json({
-                  success: false,
-                  message: "Internal server error",
-            });
-      }
-};
-
-export const getVps = async (req: Request, res: Response) => {
-      try {
+export const getVps = asyncHandler(
+      async (req: Request, res: Response): Promise<void> => {
             const user = req.user!;
 
             const { id } = req.params as { id: string };
 
             if (!Types.ObjectId.isValid(id)) {
-                  return res.status(400).json({
-                        success: false,
-                        message: "Invalid VPS id",
-                  });
+                  throw new AppError("Invalid VPS id", 400);
             }
 
             const vps = await getVpsWithRuntimeService(user.id, id);
 
             if (!vps) {
-                  return res.status(404).json({
-                        success: false,
-                        message: "VPS not found",
-                  });
+                  throw new AppError("VPS not found", 404);
             }
 
-            return res.status(200).json({
+            res.status(200).json({
                   success: true,
                   data: vps,
             });
-      } catch (error) {
-            console.error("[GET VPS]", error);
+      },
+);
 
-            return res.status(500).json({
-                  success: false,
-                  message: "Internal server error",
-            });
-      }
-};
-
-export const stopVps = async (req: Request, res: Response) => {
-      try {
+export const stopVps = asyncHandler(
+      async (req: Request, res: Response): Promise<void> => {
             const user = req.user!;
             const { id } = req.params as { id: string };
 
             const result = await stopVpsService(user.id, id);
 
             if (!result) {
-                  return res.status(404).json({
-                        success: false,
-                        message: "VPS not found",
-                  });
+                  throw new AppError("VPS not found", 404);
             }
 
-            return res.json({
+            res.json({
                   success: true,
                   message: "VPS stopped successfully",
                   data: result,
             });
-      } catch (error) {
-            console.error("[STOP VPS]", error);
+      },
+);
 
-            return res.status(500).json({
-                  success: false,
-                  message: "Internal server error",
-            });
-      }
-};
-
-export const startVps = async (req: Request, res: Response) => {
-      try {
+export const startVps = asyncHandler(
+      async (req: Request, res: Response): Promise<void> => {
             const user = req.user!;
             const { id } = req.params as { id: string };
             const result = await startVpsService(user.id, id);
 
             if (!result) {
-                  return res.status(404).json({
-                        success: false,
-                        message: "VPS not found",
-                  });
+                  throw new AppError("VPS not found", 404);
             }
 
-            return res.json({
+            res.json({
                   success: true,
                   message: "VPS started successfully",
                   data: result,
             });
-      } catch (error) {
-            console.error("[START VPS]", error);
+      },
+);
 
-            return res.status(500).json({
-                  success: false,
-                  message: "Internal server error",
-            });
-      }
-};
-
-export const restartVps = async (req: Request, res: Response) => {
-      try {
+export const restartVps = asyncHandler(
+      async (req: Request, res: Response): Promise<void> => {
             const user = req.user!;
             const { id } = req.params as { id: string };
             const result = await restartVpsService(user.id, id);
 
             if (!result) {
-                  return res.status(404).json({
-                        success: false,
-                        message: "VPS not found",
-                  });
+                  throw new AppError("VPS not found", 404);
             }
 
-            return res.json({
+            res.json({
                   success: true,
                   message: "VPS restarted successfully",
                   runtime: result,
             });
-      } catch (error) {
-            console.error("[RESTART VPS]", error);
+      },
+);
 
-            return res.status(500).json({
-                  success: false,
-                  message: "Internal server error",
-            });
-      }
-};
-
-export const deleteVps = async (req: Request, res: Response) => {
-      try {
+export const deleteVps = asyncHandler(
+      async (req: Request, res: Response): Promise<void> => {
             const user = req.user!;
             const { id } = req.params as { id: string };
             const deleted = await deleteVpsService(user.id, id);
 
             if (!deleted) {
-                  return res.status(404).json({
-                        success: false,
-                        message: "VPS not found",
-                  });
+                  throw new AppError("VPS not found", 404);
             }
 
-            return res.json({
+            res.json({
                   success: true,
                   message: "VPS deleted successfully",
             });
-      } catch (error) {
-            console.error("[DELETE VPS]", error);
-
-            return res.status(500).json({
-                  success: false,
-                  message: "Internal server error",
-            });
-      }
-};
+      },
+);
