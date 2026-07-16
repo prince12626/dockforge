@@ -14,20 +14,39 @@ import { stopVpsService } from "../services/vps.service.js";
 export const createVps = async (req: Request, res: Response) => {
       try {
             const { name, os, resources } = req.body;
-
-            if (!name || !os || !resources) {
-                  return res.status(400).json({
-                        message: "Missing required fields",
-
-                        status: "error",
-                  });
-            }
-
             const user = req.user;
 
             if (!user) {
                   return res.status(401).json({
+                        success: false,
                         message: "Unauthorized",
+                  });
+            }
+
+            if (!name || !os || !resources) {
+                  return res.status(400).json({
+                        success: false,
+                        message: "Missing required fields",
+                  });
+            }
+
+            const subscription = req.subscription;
+
+            if (!subscription || subscription.status !== "active") {
+                  return res.status(403).json({
+                        success: false,
+                        message: "You need an active subscription to create a VPS.",
+                  });
+            }
+
+            const plan = subscription.planId;
+
+            const userVps = await getUserVpsService(user.id);
+
+            if (userVps.length >= plan.maxVps) {
+                  return res.status(403).json({
+                        success: false,
+                        message: `Your ${plan.name} plan allows a maximum of ${plan.maxVps} VPS.`,
                   });
             }
 
@@ -35,38 +54,45 @@ export const createVps = async (req: Request, res: Response) => {
 
             if (!image) {
                   return res.status(400).json({
-                        message: "Invalid OS image",
+                        success: false,
+                        message: "Invalid operating system.",
+                  });
+            }
+
+            // Optional: Prevent requesting resources above the plan
+            if (
+                  resources.cpu > plan.cpu ||
+                  resources.memory > plan.memory * 1024 ||
+                  resources.storage > plan.storage
+            ) {
+                  return res.status(400).json({
+                        success: false,
+                        message: "Requested resources exceed your current plan limits.",
                   });
             }
 
             const vps = await createVpsService({
                   userId: user.id,
-
                   name,
-
                   image,
-
                   resources: {
-                        cpu: resources.cpu ?? 1,
-
-                        memory: resources.memory ?? 1024,
-
-                        storage: resources.storage ?? 10,
+                        cpu: resources.cpu,
+                        memory: resources.memory,
+                        storage: resources.storage,
                   },
             });
 
             return res.status(201).json({
-                  message: "VPS created successfully",
-
+                  success: true,
+                  message: "VPS created successfully.",
                   data: vps,
             });
       } catch (error) {
-            console.error("[ERROR] CREATE VPS:", error);
+            console.error("[CREATE VPS]", error);
 
             return res.status(500).json({
-                  message: "Internal server error",
-
-                  status: "error",
+                  success: false,
+                  message: "Internal server error.",
             });
       }
 };

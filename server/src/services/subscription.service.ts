@@ -7,7 +7,6 @@ interface CreateSubscription {
       expiresAt: Date;
 }
 export async function createSubscription(data: CreateSubscription) {
-      // Purani active subscription expire kar do
       await Subscription.updateMany(
             {
                   userId: data.userId,

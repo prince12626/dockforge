@@ -65,16 +65,21 @@ const CreateVPSPage = () => {
       const handleSubmit = async (e: React.FormEvent) => {
             e.preventDefault();
 
+            const loadingToast = toast.loading("Deploying your VPS...");
+
             try {
                   const response = await dispatch(createVps(formData)).unwrap();
+                  console.log(response);
+                  toast.success("VPS deployed successfully 🎉", {
+                        id: loadingToast,
+                  });
 
-                  console.log("VPS CREATED:", response);
-                  if (response.data) {
-                        toast.success("VPS Created!");
-                        router.push(`/dashboard/vps/${response.data._id}`);
-                  }
-            } catch (error) {
-                  console.error("CREATE VPS ERROR:", error);
+                  router.push(`/dashboard/vps/${response.data._id}`);
+            } catch (err) {
+                  console.log("UNWRAP:", err, typeof err);
+                  toast.error(String(err), {
+                        id: loadingToast,
+                  });
             }
       };
 

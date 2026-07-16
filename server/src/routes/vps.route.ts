@@ -9,10 +9,11 @@ import {
       stopVps,
 } from "../controllers/vps.controller.js";
 import { authMiddleware } from "../middlewares/auth.middleware.js";
+import { requireSubscription } from "../middlewares/subscription.middleware.js";
 
 const router = Router();
 
-router.post("/", authMiddleware, createVps);
+router.post("/", authMiddleware, requireSubscription, createVps);
 router.get("/", authMiddleware, getMyVps);
 router.get("/stats/:id", authMiddleware, getVps);
 router.get("/:id", authMiddleware, getVps);

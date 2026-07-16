@@ -1,5 +1,5 @@
 import type { NextFunction, Request, Response } from "express";
-import { getUserSubscription } from "../services/subscription.service.js";
+import { getActiveSubscription } from "../services/subscription.service.js";
 
 export async function requireSubscription(
       req: Request,
@@ -12,8 +12,10 @@ export async function requireSubscription(
                   message: "Login or Sign up first!",
             });
       }
-      const subscription = await getUserSubscription(req.user.id);
+      const subscription = await getActiveSubscription(req.user.id);
 
+      req.subscription = subscription;
+      console.log(subscription);
       if (!subscription) {
             return res.status(403).json({
                   message: "Please choose a plan",
