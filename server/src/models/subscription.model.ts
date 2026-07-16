@@ -3,7 +3,7 @@ import { Schema, model, Types } from "mongoose";
 const subscriptionSchema = new Schema(
       {
             userId: {
-                  type: String, // Better Auth User ID
+                  type: String,
                   required: true,
                   index: true,
             },

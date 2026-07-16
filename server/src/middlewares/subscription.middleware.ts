@@ -15,7 +15,6 @@ export async function requireSubscription(
       const subscription = await getActiveSubscription(req.user.id);
 
       req.subscription = subscription;
-      console.log(subscription);
       if (!subscription) {
             return res.status(403).json({
                   message: "Please choose a plan",
