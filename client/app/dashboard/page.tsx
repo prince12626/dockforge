@@ -190,8 +190,8 @@ export default function DashboardPage() {
                                                             className={
                                                                   vps.status ===
                                                                   "running"
-                                                                        ? "text-green-400"
-                                                                        : "text-red-400"
+                                                                        ? "text-green-400 capitalize"
+                                                                        : "text-red-400 capitalize"
                                                             }
                                                       >
                                                             {vps.status}
