@@ -22,11 +22,16 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
       const [isConnected, setIsConnected] = useState(false);
       const { selected } = useAppSelector((state) => state.vps);
       useEffect(() => {
+            if (!selected?.container?.id) {
+                  return;
+            }
+
             let socketInstance: Socket | null = null;
 
             const initSocket = async () => {
                   try {
                         const { data } = await authClient.getSession();
+
                         if (!data?.user?.id || !data.session?.token) {
                               console.warn(
                                     "⚠️ No active session found. Socket connection skipped.",
@@ -41,10 +46,10 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
                               withCredentials: true,
                               auth: {
                                     userId: data.user.id,
-                                    token: data.session?.token,
+                                    token: data.session.token,
                               },
                               query: {
-                                    vpsId: selected?.container.id,
+                                    vpsId: selected.container.id,
                               },
                         });
 
@@ -80,12 +85,9 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
             initSocket();
 
             return () => {
-                  if (socketInstance) {
-                        console.log("🧹 Disconnecting socket on unmount...");
-                        socketInstance.disconnect();
-                  }
+                  socketInstance?.disconnect();
             };
-      }, []);
+      }, [selected?.container?.id]);
 
       return (
             <SocketContext.Provider value={{ socket, isConnected }}>

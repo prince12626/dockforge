@@ -71,7 +71,7 @@ export function setupTerminalSocket(io: Server) {
             }
 
             let shell: pty.IPty;
-
+            let isAlive = false;
             try {
                   shell = pty.spawn(
                         "docker",
@@ -86,8 +86,8 @@ export function setupTerminalSocket(io: Server) {
                               },
                         },
                   );
-
                   activeTerminals.set(containerId, shell);
+                  isAlive = true;
             } catch (error) {
                   socket.emit(
                         "terminal-output",
@@ -101,18 +101,42 @@ export function setupTerminalSocket(io: Server) {
             });
 
             shell.onExit(() => {
+                  isAlive = false;
                   activeTerminals.delete(containerId);
-                  socket.disconnect();
+                  if (socket.connected) {
+                        socket.emit(
+                              "terminal-output",
+                              "\r\n\x1b[31mTerminal closed.\x1b[0m\r\n",
+                        );
+                        socket.disconnect(true);
+                  }
             });
 
             socket.on("terminal-input", (data: string) => {
+                  if (!isAlive) return;
                   if (typeof data !== "string") return;
-                  shell.write(data.replace(/\r/g, "\n"));
+
+                  try {
+                        shell.write(data.replace(/\r/g, "\n"));
+                  } catch {}
             });
 
             socket.on("terminal-resize", ({ cols, rows }) => {
-                  if (cols > 0 && rows > 0) {
+                  if (!isAlive) return;
+
+                  if (
+                        typeof cols !== "number" ||
+                        typeof rows !== "number" ||
+                        cols <= 0 ||
+                        rows <= 0
+                  ) {
+                        return;
+                  }
+
+                  try {
                         shell.resize(cols, rows);
+                  } catch (err) {
+                        console.warn("Ignoring PTY resize:", err);
                   }
             });
 

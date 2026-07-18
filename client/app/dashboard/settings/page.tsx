@@ -29,7 +29,7 @@ export default function SettingsPage() {
                                     </label>
 
                                     <input
-                                          defaultValue="Prince Chaurasiya"
+                                          defaultValue="John Doe"
                                           className="w-full border border-border bg-background px-4 py-3 outline-none transition focus:border-accent"
                                     />
                               </div>
@@ -40,7 +40,7 @@ export default function SettingsPage() {
                                     </label>
 
                                     <input
-                                          defaultValue="prince@example.com"
+                                          defaultValue="john@example.com"
                                           className="w-full border border-border bg-background px-4 py-3 outline-none transition focus:border-accent"
                                     />
                               </div>
