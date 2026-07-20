@@ -1,6 +1,6 @@
 {
-      "scripts": {
-            "dev:b": "cd server && cls && npm run dev",
-            "dev:f": "cd client && cls && npm run dev -- --port 4000"
-      }
+  "scripts": {
+    "dev:b": "cd server && cls && npm run dev",
+    "dev:f": "cd client && cls && npm run dev -- --port 4000"
+  }
 }

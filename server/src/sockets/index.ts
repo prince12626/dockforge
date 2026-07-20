@@ -6,50 +6,50 @@ import { setupTerminalSocket } from "./terminal.socket.js";
 export let io: Server;
 
 export function initializeSocket(server: HttpServer) {
-      io = new Server(server, {
-            cors: {
-                  origin: "http://localhost:4000",
-                  credentials: true,
-            },
+  io = new Server(server, {
+    cors: {
+      origin: "http://localhost:4000",
+      credentials: true,
+    },
+  });
+
+  io.use(async (socket, next) => {
+    try {
+      const headers = new Headers();
+
+      const cookie = socket.handshake.headers.cookie;
+
+      if (cookie) {
+        headers.set("cookie", cookie);
+      }
+
+      const session = await auth.api.getSession({
+        headers,
       });
 
-      io.use(async (socket, next) => {
-            try {
-                  const headers = new Headers();
+      if (!session) {
+        return next(new Error("Unauthorized"));
+      }
 
-                  const cookie = socket.handshake.headers.cookie;
+      socket.data.userId = session.user.id;
 
-                  if (cookie) {
-                        headers.set("cookie", cookie);
-                  }
+      next();
+    } catch (error) {
+      console.log(error);
 
-                  const session = await auth.api.getSession({
-                        headers,
-                  });
+      next(new Error("Authentication failed"));
+    }
+  });
 
-                  if (!session) {
-                        return next(new Error("Unauthorized"));
-                  }
+  setupTerminalSocket(io);
 
-                  socket.data.userId = session.user.id;
+  io.on("connection", (socket) => {
+    console.log("Socket connected:", socket.data.userId);
 
-                  next();
-            } catch (error) {
-                  console.log(error);
+    socket.on("disconnect", () => {
+      console.log("Socket disconnected:", socket.id);
+    });
+  });
 
-                  next(new Error("Authentication failed"));
-            }
-      });
-
-      setupTerminalSocket(io);
-
-      io.on("connection", (socket) => {
-            console.log("Socket connected:", socket.data.userId);
-
-            socket.on("disconnect", () => {
-                  console.log("Socket disconnected:", socket.id);
-            });
-      });
-
-      return io;
+  return io;
 }

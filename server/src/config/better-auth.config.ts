@@ -7,11 +7,11 @@ const client = new MongoClient(process.env.DB!);
 await client.connect();
 
 export const auth = betterAuth({
-      database: mongodbAdapter(client.db()),
-      basePath: "/api/v1/authentication",
-      emailAndPassword: {
-            enabled: true,
-      },
-      trustedOrigins: ["http://localhost:4000"],
-      appName: "Hostinger",
+  database: mongodbAdapter(client.db()),
+  basePath: "/api/v1/authentication",
+  emailAndPassword: {
+    enabled: true,
+  },
+  trustedOrigins: ["http://localhost:4000"],
+  appName: "Hostinger",
 });

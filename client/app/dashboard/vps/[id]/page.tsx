@@ -1,11 +1,11 @@
 import VPSDetails from "@/components/VPSDetails";
 
 export default async function VpsDetailsPage({
-      params,
+  params,
 }: {
-      params: { id: string };
+  params: { id: string };
 }) {
-      const { id } = await params;
+  const { id } = await params;
 
-      return <VPSDetails id={id} />;
+  return <VPSDetails id={id} />;
 }

@@ -1,10 +1,10 @@
 import type { ErrorRequestHandler } from "express";
 
 export const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
-      console.error(err);
+  console.error(err);
 
-      return res.status(err.statusCode || 500).json({
-            success: false,
-            message: err.message || "Internal server error",
-      });
+  return res.status(err.statusCode || 500).json({
+    success: false,
+    message: err.message || "Internal server error",
+  });
 };

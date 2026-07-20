@@ -6,10 +6,10 @@ import { errorHandler } from "./middlewares/error.middleware.js";
 const app = express();
 
 app.use(
-      cors({
-            origin: "http://localhost:4000",
-            credentials: true,
-      }),
+  cors({
+    origin: "http://localhost:4000",
+    credentials: true,
+  }),
 );
 
 app.use(express.json());

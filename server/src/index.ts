@@ -10,10 +10,10 @@ const server = http.createServer(app);
 initializeSocket(server);
 
 async function startServer() {
-      await connectDB();
-      server.listen(PORT, () => {
-            console.log(`🚀 ${PORT}`);
-      });
+  await connectDB();
+  server.listen(PORT, () => {
+    console.log(`🚀 ${PORT}`);
+  });
 }
 
 startServer();

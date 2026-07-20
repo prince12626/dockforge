@@ -1,12 +1,12 @@
 import { Router } from "express";
 import {
-      createVps,
-      deleteVps,
-      getMyVps,
-      getVps,
-      restartVps,
-      startVps,
-      stopVps,
+  createVps,
+  deleteVps,
+  getMyVps,
+  getVps,
+  restartVps,
+  startVps,
+  stopVps,
 } from "../controllers/vps.controller.js";
 import { authMiddleware } from "../middlewares/auth.middleware.js";
 import { requireSubscription } from "../middlewares/subscription.middleware.js";
