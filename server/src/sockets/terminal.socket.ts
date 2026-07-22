@@ -75,7 +75,7 @@ export function setupTerminalSocket(io: Server) {
             try {
                   shell = pty.spawn(
                         "docker",
-                        ["exec", "-it", containerId, "/bin/bash"],
+                        ["exec", "-i", containerId, "/bin/bash"],
                         {
                               name: "xterm-color",
                               cols: 80,
