@@ -6,13 +6,13 @@ import { errorHandler } from "./middlewares/error.middleware.js";
 const app = express();
 
 app.use(
-  cors({
-    origin: "http://localhost:4000",
-    credentials: true,
-  }),
+      cors({
+            origin: process.env.CLIENT_URL,
+            credentials: true,
+      }),
 );
 
-app.use(express.json());
+app.use(express.json());  
 app.use("/api/v1", router);
 app.use(errorHandler);
 export default app;
