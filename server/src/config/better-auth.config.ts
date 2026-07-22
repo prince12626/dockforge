@@ -16,11 +16,12 @@ export const auth = betterAuth({
       appName: "Dockforge",
       advanced: {
             crossSubDomainCookies: {
-                  enabled: false,
+                  enabled: true,
+                  domain: ".princechaurasiya.in",
             },
 
             defaultCookieAttributes: {
-                  sameSite: "none",
+                  sameSite: "lax",
                   secure: true,
                   httpOnly: true,
             },
