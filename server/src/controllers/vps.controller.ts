@@ -13,6 +13,15 @@ import { stopVpsService } from "../services/vps.service.js";
 import { asyncHandler } from "../utils/async-handler.util.js";
 import { AppError } from "../utils/app-error.util.js";
 
+function getUsernameFromName(name: string): string {
+      const trimmed = name.trim();
+      const parts = trimmed.split(/\s+/);
+      if (parts.length > 1) {
+            return parts[0].toLowerCase();
+      }
+      return parts[0].toLowerCase();
+}
+
 export const createVps = asyncHandler(
   async (req: Request, res: Response): Promise<void> => {
     const { name, os, resources } = req.body;
@@ -65,14 +74,15 @@ export const createVps = asyncHandler(
     }
 
     const vps = await createVpsService({
-      userId: user.id,
-      name,
-      image,
-      resources: {
-        cpu: resources.cpu,
-        memory: resources.memory,
-        storage: resources.storage,
-      },
+          userId: user.id,
+          name,
+          image,
+          username: getUsernameFromName(user.name),
+          resources: {
+                cpu: resources.cpu,
+                memory: resources.memory,
+                storage: resources.storage,
+          },
     });
 
     res.status(201).json({
