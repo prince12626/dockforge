@@ -69,7 +69,11 @@ export function setupTerminalSocket(io: Server) {
                   const container = docker.getContainer(containerId);
 
                   exec = await container.exec({
-                        Cmd: ["/bin/bash"],
+                        Cmd: [
+                              "/bin/bash",
+                              "-c",
+                              `export PS1='\\u@\\h:\\w\\$ ' && exec /bin/bash`,
+                        ],
                         AttachStdin: true,
                         AttachStdout: true,
                         AttachStderr: true,
