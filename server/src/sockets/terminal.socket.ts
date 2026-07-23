@@ -72,7 +72,7 @@ export function setupTerminalSocket(io: Server) {
                         Cmd: [
                               "/bin/bash",
                               "-c",
-                              `export PS1='\\u@\\h:\\w\\$ ' && exec /bin/bash`,
+                              `echo "PS1='\\u@\\h:\\w\\$ '" > /tmp/.custom_bashrc && exec /bin/bash --rcfile /tmp/.custom_bashrc -i`,
                         ],
                         AttachStdin: true,
                         AttachStdout: true,

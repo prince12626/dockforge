@@ -15,41 +15,36 @@ import {
 import Button from "./ui/Button";
 
 const sections = [
-  {
-    title: "Infrastructure",
-    items: [
       {
-        icon: LayoutDashboard,
-        name: "Overview",
-        href: "/dashboard",
+            title: "Infrastructure",
+            items: [
+                  {
+                        icon: LayoutDashboard,
+                        name: "Overview",
+                        href: "/dashboard",
+                  },
+                  {
+                        icon: PlusSquare,
+                        name: "Create VPS",
+                        href: "/dashboard/vps/create",
+                  },
+            ],
       },
       {
-        icon: PlusSquare,
-        name: "Create VPS",
-        href: "/dashboard/vps/create",
+            title: "Workspace",
+            items: [
+                  {
+                        icon: CreditCard,
+                        name: "Billing",
+                        href: "/dashboard/billing",
+                  },
+                  {
+                        icon: CircleHelp,
+                        name: "Support",
+                        href: "/dashboard/support",
+                  },
+            ],
       },
-    ],
-  },
-  {
-    title: "Workspace",
-    items: [
-      {
-        icon: CreditCard,
-        name: "Billing",
-        href: "/dashboard/billing",
-      },
-      {
-        icon: Settings,
-        name: "Settings",
-        href: "/dashboard/settings",
-      },
-      {
-        icon: CircleHelp,
-        name: "Support",
-        href: "/dashboard/support",
-      },
-    ],
-  },
 ];
 
 export default function Sidebar() {
