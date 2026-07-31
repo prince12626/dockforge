@@ -8,7 +8,6 @@ import billingRouter from "./billing.route.js";
 
 const router = Router();
 
-// Authentication via Better Auth
 router.use("/authentication", toNodeHandler(auth));
 router.use("/vps", vpsRouter);
 router.use("/plans", plansRouter);

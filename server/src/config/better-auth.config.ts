@@ -3,7 +3,7 @@ import { betterAuth } from "better-auth";
 import { mongodbAdapter } from "better-auth/adapters/mongodb";
 
 const client = new MongoClient(process.env.DB!);
-
+const isProd = process.env.NODE_ENV === "production";
 await client.connect();
 
 export const auth = betterAuth({
@@ -15,14 +15,18 @@ export const auth = betterAuth({
       trustedOrigins: [process.env.CLIENT_URL!],
       appName: "Dockforge",
       advanced: {
-            crossSubDomainCookies: {
-                  enabled: true,
-                  domain: ".princechaurasiya.in",
-            },
+            crossSubDomainCookies: isProd
+                  ? {
+                          enabled: true,
+                          domain: ".princechaurasiya.in",
+                    }
+                  : {
+                          enabled: false,
+                    },
 
             defaultCookieAttributes: {
                   sameSite: "lax",
-                  secure: true,
+                  secure: isProd,
                   httpOnly: true,
             },
       },
