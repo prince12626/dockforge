@@ -15,14 +15,13 @@ const Button = ({
   ...props
 }: ButtonProps) => {
   const base =
-    "cursor-pointer rounded-none font-medium transition-all duration-300";
+        "cursor-pointer rounded-sm font-medium transition-all duration-300";
 
   const variants = {
-    primary:
-      "bg-white text-black shadow-[4px_4px_0px_var(--color-accent)] hover:shadow-[6px_6px_0px_var(--color-accent)] hover:-translate-x-0.5 hover:-translate-y-0.5 hover:text-black/80",
-    secondary:
-      "border border-border bg-transparent text-white hover:bg-white/5 hover:-translate-y-0.5",
-    danger: "bg-red-500/50 text-white hover:bg-red-500 border border-red-500",
+        primary: "bg-white text-black hover:text-black/80",
+        secondary:
+              "border border-border bg-transparent text-white hover:bg-white/5 hover:-translate-y-0.5",
+        danger: "bg-red-500/50 text-white hover:bg-red-500 border border-red-500",
   };
 
   const sizes = {

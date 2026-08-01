@@ -84,32 +84,35 @@ export default function Sidebar() {
                     pathname.startsWith(item.href));
 
                 return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className={`group flex items-center gap-3 border px-3 py-2.5 transition-all duration-200 ${
-                      active
-                        ? "border-accent bg-white/5 text-white"
-                        : "border-transparent text-white/65 hover:border-border hover:bg-white/5 hover:text-white"
-                    }`}
-                  >
-                    <Icon
-                      size={18}
-                      className={
-                        active
-                          ? "text-accent"
-                          : "text-white/45 transition group-hover:text-white"
-                      }
-                    />
+                      <Link
+                            key={item.href}
+                            href={item.href}
+                            className={`rounded-md group flex items-center gap-3 border px-3 py-2.5 transition-all duration-200 ${
+                                  active
+                                        ? "border-accent bg-white/5 text-white"
+                                        : "border-transparent text-white/65 hover:border-border hover:bg-white/5 hover:text-white"
+                            }`}
+                      >
+                            <Icon
+                                  size={18}
+                                  className={
+                                        active
+                                              ? "text-accent"
+                                              : "text-white/45 transition group-hover:text-white"
+                                  }
+                            />
 
-                    <span className="flex-1 text-[15px] font-medium">
-                      {item.name}
-                    </span>
+                            <span className="flex-1 text-[15px] font-medium">
+                                  {item.name}
+                            </span>
 
-                    {active && (
-                      <ChevronRight size={16} className="text-accent" />
-                    )}
-                  </Link>
+                            {active && (
+                                  <ChevronRight
+                                        size={16}
+                                        className="text-accent"
+                                  />
+                            )}
+                      </Link>
                 );
               })}
             </div>
