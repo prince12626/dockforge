@@ -68,7 +68,7 @@ export const selectPlan = asyncHandler(
                   key: process.env.RAZORPAY_API_KEY,
                   order,
             });
-      };,
+      }
 );
 
 export const fetchPlans = asyncHandler(
