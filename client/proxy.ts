@@ -3,30 +3,48 @@ import { NextRequest, NextResponse } from "next/server";
 const protectedRoutes = ["/dashboard"];
 const authRoutes = ["/login", "/register"];
 
-export function proxy(req: NextRequest) {
-  const pathname = req.nextUrl.pathname;
+const BACKEND_URL = "https://dockforge-backend.princechaurasiya.in";
 
-  const isProtected = protectedRoutes.some((route) =>
-    pathname.startsWith(route),
-  );
+export async function proxy(req: NextRequest) {
+      const pathname = req.nextUrl.pathname;
 
-  const isAuthRoute = authRoutes.some((route) => pathname.startsWith(route));
+      const isProtected = protectedRoutes.some((route) =>
+            pathname.startsWith(route),
+      );
 
-  const session =
-    req.cookies.get("better-auth.session_token")?.value ??
-    req.cookies.get("__Secure-better-auth.session_token")?.value;
+      const isAuthRoute = authRoutes.some((route) =>
+            pathname.startsWith(route),
+      );
 
-  if (isProtected && !session) {
-    return NextResponse.redirect(new URL("/login", req.url));
-  }
+      if (!isProtected && !isAuthRoute) {
+            return NextResponse.next();
+      }
 
-  if (isAuthRoute && session) {
-    return NextResponse.redirect(new URL("/dashboard", req.url));
-  }
+      const sessionResponse = await fetch(
+            `${BACKEND_URL}/api/v1/authentication/get-session`,
+            {
+                  headers: {
+                        cookie: req.headers.get("cookie") ?? "",
+                  },
+                  cache: "no-store",
+            },
+      );
 
-  return NextResponse.next();
+      const session = await sessionResponse.json();
+
+      const isAuthenticated = !!session?.user;
+
+      if (isProtected && !isAuthenticated) {
+            return NextResponse.redirect(new URL("/login", req.url));
+      }
+
+      if (isAuthRoute && isAuthenticated) {
+            return NextResponse.redirect(new URL("/dashboard", req.url));
+      }
+
+      return NextResponse.next();
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/login", "/register"],
+      matcher: ["/dashboard/:path*", "/login", "/register"],
 };
