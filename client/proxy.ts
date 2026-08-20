@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 const protectedRoutes = ["/dashboard"];
 const authRoutes = ["/login", "/register"];
 
-export async function proxy(req: NextRequest) {
+export function proxy(req: NextRequest) {
       const pathname = req.nextUrl.pathname;
 
       const isProtected = protectedRoutes.some((route) =>
@@ -14,43 +14,28 @@ export async function proxy(req: NextRequest) {
             pathname.startsWith(route),
       );
 
+      const sessionToken =
+            req.cookies.get("__Secure-better-auth.session_token")?.value ??
+            req.cookies.get("better-auth.session_token")?.value;
+
+      const isAuthenticated = Boolean(sessionToken);
+
+      // Not an auth-related route
       if (!isProtected && !isAuthRoute) {
             return NextResponse.next();
       }
 
-      try {
-            const response = await fetch(
-                  "https://dockforge-backend.princechaurasiya.in/api/v1/authentication/get-session",
-                  {
-                        headers: {
-                              cookie: req.headers.get("cookie") ?? "",
-                        },
-                        cache: "no-store",
-                  },
-            );
-
-            const session = await response.json();
-
-            const isAuthenticated = !!session?.user;
-
-            if (isProtected && !isAuthenticated) {
-                  return NextResponse.redirect(new URL("/login", req.url));
-            }
-
-            if (isAuthRoute && isAuthenticated) {
-                  return NextResponse.redirect(new URL("/dashboard", req.url));
-            }
-
-            return NextResponse.next();
-      } catch (error) {
-            console.error("Proxy auth error:", error);
-
-            if (isProtected) {
-                  return NextResponse.redirect(new URL("/login", req.url));
-            }
-
-            return NextResponse.next();
+      // User is not logged in → login
+      if (isProtected && !isAuthenticated) {
+            return NextResponse.redirect(new URL("/login", req.url));
       }
+
+      // User is already logged in → dashboard
+      if (isAuthRoute && isAuthenticated) {
+            return NextResponse.redirect(new URL("/dashboard", req.url));
+      }
+
+      return NextResponse.next();
 }
 
 export const config = {
