@@ -13,25 +13,53 @@ export const metadata: Metadata = {
 };
 
 const elms_sans = Elms_Sans({
-  subsets: ["latin"],
-  variable: "--font-elms-sans",
+      subsets: ["latin"],
+      variable: "--font-elms-sans",
 });
 export default function RootLayout({
-  children,
+      children,
 }: Readonly<{
-  children: React.ReactNode;
+      children: React.ReactNode;
 }>) {
-  return (
-    <html lang="en" className={`${elms_sans.className} font-sans`}>
-      <StoreProvider>
-        <SocketProvider>
-          <body className="min-h-full flex flex-col">
-            <Toaster />
-            <NavbarWrapper>{children}</NavbarWrapper>
-            <Script src="https://checkout.razorpay.com/v1/checkout.js" />
-          </body>
-        </SocketProvider>
-      </StoreProvider>
-    </html>
-  );
+      return (
+            <html lang="en" className={`${elms_sans.className} font-sans`}>
+                  {/* <StoreProvider> */}
+                  {/* <SocketProvider> */}
+                  <body className="min-h-full flex flex-col">
+                        <main className="min-h-screen flex items-center justify-center bg-[#0b0b0b] text-white px-6">
+                              <div className="text-center max-w-lg">
+                                    <div className="text-6xl mb-6">🚧</div>
+
+                                    <h1 className="text-4xl font-bold mb-4">
+                                          DockForge is no longer available.
+                                    </h1>
+
+                                    <p className="text-gray-400 text-lg">
+                                          Due to excessive resource usage and
+                                          repeated abuse of the VPS system,
+                                          we’ve decided to shut DockForge down.
+                                          A lot of VPS instances were being
+                                          created without consideration for the
+                                          resources they consumed, making it
+                                          increasingly difficult to keep the
+                                          service running reliably. At this
+                                          point, I don’t think DockForge will be
+                                          coming back. Thank you to everyone who
+                                          used it, tested it, gave feedback, or
+                                          supported the project along the way.
+                                          <br />
+                                          <span className="text-white">
+                                                — Prince
+                                          </span>
+                                    </p>
+                              </div>
+                        </main>
+                        {/* <Toaster /> */}
+                        {/* <NavbarWrapper>{children}</NavbarWrapper> */}
+                        {/* <Script src="https://checkout.razorpay.com/v1/checkout.js" /> */}
+                  </body>
+                  {/* </SocketProvider> */}
+                  {/* </StoreProvider> */}
+            </html>
+      );
 }
