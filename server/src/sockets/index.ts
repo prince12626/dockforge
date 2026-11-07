@@ -8,7 +8,7 @@ export let io: Server;
 export function initializeSocket(server: HttpServer) {
   io = new Server(server, {
     cors: {
-      origin: "http://localhost:4000",
+      origin: process.env.CLIENT_URL,
       credentials: true,
     },
   });
@@ -34,9 +34,7 @@ export function initializeSocket(server: HttpServer) {
       socket.data.userId = session.user.id;
 
       next();
-    } catch (error) {
-      console.log(error);
-
+    } catch {
       next(new Error("Authentication failed"));
     }
   });

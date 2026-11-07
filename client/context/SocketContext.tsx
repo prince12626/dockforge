@@ -32,22 +32,24 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
       try {
         const { data } = await authClient.getSession();
 
-        if (!data?.user?.id || !data.session?.token) {
+        if (!data?.user?.id) {
           console.warn(
             "⚠️ No active session found. Socket connection skipped.",
           );
           return;
         }
 
-        socketInstance = io("http://localhost:3000/terminal", {
+        const socketURL = process.env.NEXT_PUBLIC_SOCKET_URL;
+
+        if (!socketURL) {
+          throw new Error("NEXT_PUBLIC_SOCKET_URL is not configured.");
+        }
+
+        socketInstance = io(new URL("/terminal", socketURL).toString(), {
           transports: ["websocket"],
           upgrade: false,
           forceNew: true,
           withCredentials: true,
-          auth: {
-            userId: data.user.id,
-            token: data.session.token,
-          },
           query: {
             vpsId: selected.container.id,
           },
