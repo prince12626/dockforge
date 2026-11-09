@@ -22,7 +22,7 @@ const formatMemory = (memory: number) => {
     return `${memory * 1024} MB`;
   }
 
-  return `${memory} GB`;
+  return `${memory} MB`;
 };
 
 function PlanCard({
