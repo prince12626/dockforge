@@ -38,6 +38,11 @@ async function verifyAdmin() {
 
     const session = await response.json();
 
+    console.log("[ADMIN DEBUG]", {
+      userId: session?.user?.id,
+      email: session?.user?.email,
+      role: session?.user?.role,
+    });
     if (!session?.user) {
       redirect("/login");
     }
