@@ -21,38 +21,38 @@ export default async function AdminDebugPage() {
       },
     );
 
-    const session = await response.json();
+    const responseText = await response.text();
+
+    let session: any = null;
+
+    try {
+      session = JSON.parse(responseText);
+    } catch {
+      // API returned HTML or invalid JSON.
+    }
 
     const debug = {
+      apiURL,
       httpStatus: response.status,
+      contentType: response.headers.get("content-type"),
       authenticated: Boolean(session?.user),
       userId: session?.user?.id ?? null,
       email: session?.user?.email ?? null,
       role: session?.user?.role ?? null,
-      expectedRole: ["admin", "superadmin"],
       isAdmin:
         session?.user?.role === "admin" || session?.user?.role === "superadmin",
-      sessionResponse: session,
+      response: responseText.slice(0, 3000),
     };
-
-    const responseText = await response.text();
 
     return (
       <main className="min-h-screen bg-[#050506] p-8 text-white">
-        <h1 className="mb-6 text-2xl">API Response Diagnostic</h1>
+        <div className="mx-auto max-w-4xl space-y-6">
+          <h1 className="text-2xl font-semibold">Dockforge Auth Diagnostics</h1>
 
-        <pre className="overflow-auto whitespace-pre-wrap rounded-xl bg-white/5 p-6 text-sm text-green-400">
-          {JSON.stringify(
-            {
-              apiURL,
-              status: response.status,
-              contentType: response.headers.get("content-type"),
-              response: responseText.slice(0, 3000),
-            },
-            null,
-            2,
-          )}
-        </pre>
+          <pre className="overflow-auto whitespace-pre-wrap rounded-xl border border-white/10 bg-white/5 p-6 text-sm text-green-400">
+            {JSON.stringify(debug, null, 2)}
+          </pre>
+        </div>
       </main>
     );
   } catch (error) {
