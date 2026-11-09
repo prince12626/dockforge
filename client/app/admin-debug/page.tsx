@@ -35,24 +35,24 @@ export default async function AdminDebugPage() {
       sessionResponse: session,
     };
 
+    const responseText = await response.text();
+
     return (
       <main className="min-h-screen bg-[#050506] p-8 text-white">
-        <div className="mx-auto max-w-3xl space-y-6">
-          <h1 className="text-2xl font-semibold">Dockforge Auth Diagnostics</h1>
+        <h1 className="mb-6 text-2xl">API Response Diagnostic</h1>
 
-          <div className="rounded-xl border border-white/10 bg-white/[0.03] p-6">
-            <p className="mb-4 text-sm text-white/50">Authentication status</p>
-            <p className="text-xl">
-              {debug.isAdmin
-                ? "Admin access detected"
-                : "Admin access NOT detected"}
-            </p>
-          </div>
-
-          <pre className="overflow-auto rounded-xl border border-white/10 bg-white/[0.03] p-6 text-sm text-green-400">
-            {JSON.stringify(debug, null, 2)}
-          </pre>
-        </div>
+        <pre className="overflow-auto whitespace-pre-wrap rounded-xl bg-white/5 p-6 text-sm text-green-400">
+          {JSON.stringify(
+            {
+              apiURL,
+              status: response.status,
+              contentType: response.headers.get("content-type"),
+              response: responseText.slice(0, 3000),
+            },
+            null,
+            2,
+          )}
+        </pre>
       </main>
     );
   } catch (error) {
