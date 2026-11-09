@@ -3,6 +3,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { Bricolage_Grotesque, Manrope } from "next/font/google";
 import axiosInstance from "@/lib/api";
+import Link from "next/link";
 
 const display = Bricolage_Grotesque({
   subsets: ["latin"],
@@ -208,9 +209,12 @@ export default function BillingPage() {
                 </ul>
               </div>
 
-              <button className="db-btn-ghost h-11 shrink-0 rounded-xl px-6 text-sm font-medium">
+              <Link
+                href="/plans"
+                className="db-btn-ghost h-11 shrink-0 rounded-xl px-6 text-sm font-medium"
+              >
                 Upgrade Plan
-              </button>
+              </Link>
             </div>
           ) : (
             <div className="mt-6 flex flex-col items-start gap-5 sm:flex-row sm:items-center">
@@ -321,9 +325,12 @@ export default function BillingPage() {
                     Current Plan
                   </button>
                 ) : (
-                  <button className="db-btn-primary mt-8 h-11 w-full rounded-xl text-sm font-semibold">
+                  <Link
+                    href="/plans"
+                    className="db-btn-primary mt-8 h-11 w-full rounded-xl text-sm font-semibold"
+                  >
                     Upgrade
-                  </button>
+                  </Link>
                 )}
               </div>
             );
