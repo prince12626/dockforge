@@ -1,9 +1,9 @@
 import {
-      deleteVpsService,
-      getUserVpsService,
-      getVpsWithRuntimeService,
-      restartVpsService,
-      startVpsService,
+  deleteVpsService,
+  getUserVpsService,
+  getVpsWithRuntimeService,
+  restartVpsService,
+  startVpsService,
 } from "../services/vps.service.js";
 import type { Request, Response } from "express";
 import { getDockerImage } from "../constants/docker-images.js";
@@ -15,212 +15,214 @@ import { AppError } from "../utils/app-error.util.js";
 import { redis } from "../config/redis.config.js";
 
 function getUsernameFromName(name: string): string {
-      const trimmed = name.trim();
-      const parts = trimmed.split(/\s+/);
-      if (parts.length > 1) {
-            return parts[0].toLowerCase();
-      }
-      return parts[0].toLowerCase();
+  const trimmed = name.trim();
+  const parts = trimmed.split(/\s+/);
+  if (parts.length > 1) {
+    return parts[0].toLowerCase();
+  }
+  return parts[0].toLowerCase();
 }
 
 export const createVps = asyncHandler(
-      async (req: Request, res: Response): Promise<void> => {
-            const { name, os, resources } = req.body;
-            const user = req.user;
+  async (req: Request, res: Response): Promise<void> => {
+    const { name, os, resources } = req.body;
+    const user = req.user;
 
-            if (!user) {
-                  throw new AppError("Unauthorized", 401);
-            }
+    if (!user) {
+      throw new AppError("Unauthorized", 401);
+    }
 
-            if (!name || !os || !resources) {
-                  throw new AppError("Missing required fields", 400);
-            }
+    if (!name || !os || !resources) {
+      throw new AppError("Missing required fields", 400);
+    }
 
-            const subscription = req.subscription;
+    const subscription = req.subscription;
 
-            if (!subscription || subscription.status !== "active") {
-                  throw new AppError(
-                        "You need an active subscription to create a VPS.",
-                        403,
-                  );
-            }
+    if (!subscription || subscription.status !== "active") {
+      throw new AppError(
+        "You need an active subscription to create a VPS.",
+        403,
+      );
+    }
 
-            const plan = subscription.planId;
+    const plan = subscription.planId;
 
-            const userVps = await getUserVpsService(user.id);
+    const userVps = await getUserVpsService(user.id);
 
-            if (userVps.length >= plan.maxVps) {
-                  throw new AppError(
-                        `Your ${plan.name} plan allows a maximum of ${plan.maxVps} VPS.`,
-                        403,
-                  );
-            }
+    if (userVps.length >= plan.maxVps) {
+      throw new AppError(
+        `Your ${plan.name} plan allows a maximum of ${plan.maxVps} VPS.`,
+        403,
+      );
+    }
 
-            const image = getDockerImage(os);
+    const image = getDockerImage(os);
 
-            if (!image) {
-                  throw new AppError("Invalid operating system.", 400);
-            }
+    if (!image) {
+      throw new AppError("Invalid operating system.", 400);
+    }
 
-            // Optional: Prevent requesting resources above the plan
-            if (
-                  resources.cpu > plan.cpu ||
-                  resources.memory > plan.memory * 1024 ||
-                  resources.storage > plan.storage
-            ) {
-                  throw new AppError(
-                        "Requested resources exceed your current plan limits.",
-                        400,
-                  );
-            }
+    console.log(resources.cpu, resources.memory, resources.storage);
+    console.log(plan.cpu, plan.memory, plan.storage);
 
-            const vps = await createVpsService({
-                  userId: user.id,
-                  name,
-                  image,
-                  username: getUsernameFromName(user.name),
-                  resources: {
-                        cpu: resources.cpu,
-                        memory: resources.memory,
-                        storage: resources.storage,
-                  },
-            });
+    if (
+      resources.cpu > plan.cpu ||
+      resources.memory > plan.memory * 1024 ||
+      resources.storage > plan.storage
+    ) {
+      throw new AppError(
+        "Requested resources exceed your current plan limits.",
+        400,
+      );
+    }
 
-            await redis.del(`user:${user.id}:vps`);
-
-            res.status(201).json({
-                  success: true,
-                  message: "VPS created successfully.",
-                  data: vps,
-            });
+    const vps = await createVpsService({
+      userId: user.id,
+      name,
+      image,
+      username: getUsernameFromName(user.name),
+      resources: {
+        cpu: resources.cpu,
+        memory: resources.memory,
+        storage: resources.storage,
       },
+    });
+
+    await redis.del(`user:${user.id}:vps`);
+
+    res.status(201).json({
+      success: true,
+      message: "VPS created successfully.",
+      data: vps,
+    });
+  },
 );
 
 export const getMyVps = asyncHandler(
-      async (req: Request, res: Response): Promise<void> => {
-            const user = req.user!;
+  async (req: Request, res: Response): Promise<void> => {
+    const user = req.user!;
 
-            const cacheKey = `user:${user.id}:vps`;
+    const cacheKey = `user:${user.id}:vps`;
 
-            const cached = await redis.get(cacheKey);
+    const cached = await redis.get(cacheKey);
 
-            if (cached) {
-                  res.status(200).json({
-                        success: true,
-                        cached: true,
-                        count: JSON.parse(cached).length,
-                        data: JSON.parse(cached),
-                  });
-            }
+    if (cached) {
+      res.status(200).json({
+        success: true,
+        cached: true,
+        count: JSON.parse(cached).length,
+        data: JSON.parse(cached),
+      });
+    }
 
-            const vps = await getUserVpsService(user.id);
+    const vps = await getUserVpsService(user.id);
 
-            await redis.set(cacheKey, JSON.stringify(vps), {
-                  EX: 60,
-            });
+    await redis.set(cacheKey, JSON.stringify(vps), {
+      EX: 60,
+    });
 
-            res.status(200).json({
-                  success: true,
-                  cached: false,
-                  count: vps.length,
-                  data: vps,
-            });
-      },
+    res.status(200).json({
+      success: true,
+      cached: false,
+      count: vps.length,
+      data: vps,
+    });
+  },
 );
 
 export const getVps = asyncHandler(
-      async (req: Request, res: Response): Promise<void> => {
-            const user = req.user!;
+  async (req: Request, res: Response): Promise<void> => {
+    const user = req.user!;
 
-            const { id } = req.params as { id: string };
+    const { id } = req.params as { id: string };
 
-            if (!Types.ObjectId.isValid(id)) {
-                  throw new AppError("Invalid VPS id", 400);
-            }
+    if (!Types.ObjectId.isValid(id)) {
+      throw new AppError("Invalid VPS id", 400);
+    }
 
-            const vps = await getVpsWithRuntimeService(user.id, id);
+    const vps = await getVpsWithRuntimeService(user.id, id);
 
-            if (!vps) {
-                  throw new AppError("VPS not found", 404);
-            }
+    if (!vps) {
+      throw new AppError("VPS not found", 404);
+    }
 
-            res.status(200).json({
-                  success: true,
-                  data: vps,
-            });
-      },
+    res.status(200).json({
+      success: true,
+      data: vps,
+    });
+  },
 );
 
 export const stopVps = asyncHandler(
-      async (req: Request, res: Response): Promise<void> => {
-            const user = req.user!;
-            const { id } = req.params as { id: string };
+  async (req: Request, res: Response): Promise<void> => {
+    const user = req.user!;
+    const { id } = req.params as { id: string };
 
-            const result = await stopVpsService(user.id, id);
-            await redis.del(`user:${user.id}:vps`);
-            if (!result) {
-                  throw new AppError("VPS not found", 404);
-            }
+    const result = await stopVpsService(user.id, id);
+    await redis.del(`user:${user.id}:vps`);
+    if (!result) {
+      throw new AppError("VPS not found", 404);
+    }
 
-            res.json({
-                  success: true,
-                  message: "VPS stopped successfully",
-                  data: result,
-            });
-      },
+    res.json({
+      success: true,
+      message: "VPS stopped successfully",
+      data: result,
+    });
+  },
 );
 
 export const startVps = asyncHandler(
-      async (req: Request, res: Response): Promise<void> => {
-            const user = req.user!;
-            const { id } = req.params as { id: string };
-            const result = await startVpsService(user.id, id);
-            await redis.del(`user:${user.id}:vps`);
-            if (!result) {
-                  throw new AppError("VPS not found", 404);
-            }
+  async (req: Request, res: Response): Promise<void> => {
+    const user = req.user!;
+    const { id } = req.params as { id: string };
+    const result = await startVpsService(user.id, id);
+    await redis.del(`user:${user.id}:vps`);
+    if (!result) {
+      throw new AppError("VPS not found", 404);
+    }
 
-            res.json({
-                  success: true,
-                  message: "VPS started successfully",
-                  data: result,
-            });
-      },
+    res.json({
+      success: true,
+      message: "VPS started successfully",
+      data: result,
+    });
+  },
 );
 
 export const restartVps = asyncHandler(
-      async (req: Request, res: Response): Promise<void> => {
-            const user = req.user!;
-            const { id } = req.params as { id: string };
-            const result = await restartVpsService(user.id, id);
-            await redis.del(`user:${user.id}:vps`);
-            if (!result) {
-                  throw new AppError("VPS not found", 404);
-            }
+  async (req: Request, res: Response): Promise<void> => {
+    const user = req.user!;
+    const { id } = req.params as { id: string };
+    const result = await restartVpsService(user.id, id);
+    await redis.del(`user:${user.id}:vps`);
+    if (!result) {
+      throw new AppError("VPS not found", 404);
+    }
 
-            res.json({
-                  success: true,
-                  message: "VPS restarted successfully",
-                  runtime: result,
-            });
-      },
+    res.json({
+      success: true,
+      message: "VPS restarted successfully",
+      runtime: result,
+    });
+  },
 );
 
 export const deleteVps = asyncHandler(
-      async (req: Request, res: Response): Promise<void> => {
-            const user = req.user!;
-            const { id } = req.params as { id: string };
-            const deleted = await deleteVpsService(user.id, id);
+  async (req: Request, res: Response): Promise<void> => {
+    const user = req.user!;
+    const { id } = req.params as { id: string };
+    const deleted = await deleteVpsService(user.id, id);
 
-            await redis.del(`user:${user.id}:vps`);
+    await redis.del(`user:${user.id}:vps`);
 
-            if (!deleted) {
-                  throw new AppError("VPS not found", 404);
-            }
+    if (!deleted) {
+      throw new AppError("VPS not found", 404);
+    }
 
-            res.json({
-                  success: true,
-                  message: "VPS deleted successfully",
-            });
-      },
+    res.json({
+      success: true,
+      message: "VPS deleted successfully",
+    });
+  },
 );

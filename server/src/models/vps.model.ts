@@ -1,3 +1,4 @@
+import { VPS_UBUNTU_IMAGE } from "../constants/docker-images.js";
 import { Schema, model, Types } from "mongoose";
 
 const vpsSchema = new Schema(
@@ -28,7 +29,7 @@ const vpsSchema = new Schema(
     },
     os: {
       type: String,
-      default: "ubuntu:24.04",
+      default: VPS_UBUNTU_IMAGE,
     },
     container: {
       id: {
@@ -41,7 +42,7 @@ const vpsSchema = new Schema(
 
       image: {
         type: String,
-        default: "ubuntu:24.04",
+        default: VPS_UBUNTU_IMAGE,
       },
 
       port: {

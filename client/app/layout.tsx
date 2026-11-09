@@ -6,6 +6,7 @@ import NavbarWrapper from "@/components/NavbarWrapper";
 import { Toaster } from "sonner";
 import { SocketProvider } from "@/context/SocketContext";
 import Script from "next/script";
+import ConditionalNavbar from "@/components/ConditionalNavbar";
 
 export const metadata: Metadata = {
   title: "Dockforge",
@@ -16,6 +17,7 @@ const elms_sans = Elms_Sans({
   subsets: ["latin"],
   variable: "--font-elms-sans",
 });
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -27,7 +29,7 @@ export default function RootLayout({
         <SocketProvider>
           <body className="min-h-full flex flex-col">
             <Toaster />
-            <NavbarWrapper>{children}</NavbarWrapper>
+            <ConditionalNavbar>{children}</ConditionalNavbar>
             <Script src="https://checkout.razorpay.com/v1/checkout.js" />
           </body>
         </SocketProvider>

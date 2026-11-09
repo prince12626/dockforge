@@ -69,7 +69,14 @@ const resourceFields: {
   max: number;
   step: number;
 }[] = [
-  { key: "cpu", label: "CPU Cores", unit: "Cores", min: 1, max: 4, step: 1 },
+  {
+    key: "cpu",
+    label: "CPU Cores",
+    unit: "Cores",
+    min: 0.5,
+    max: 4,
+    step: 0.5,
+  },
   {
     key: "memory",
     label: "Memory",
@@ -126,7 +133,7 @@ const CreateVPSPage = () => {
     name: "",
     os: "ubuntu-24",
     resources: {
-      cpu: 1,
+      cpu: 0.5,
       memory: 128,
       storage: 2,
     },
