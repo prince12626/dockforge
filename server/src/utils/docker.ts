@@ -3,10 +3,7 @@ import os from "node:os";
 import type { Readable } from "stream";
 
 export const docker = new Docker({
-  socketPath:
-    os.platform() === "win32"
-      ? "\\\\.\\pipe\\docker_engine"
-      : "/var/run/docker.sock",
+  socketPath: "/Users/princechaurasiya/.docker/run/docker.sock",
 });
 
 export async function imageExists(image: string): Promise<boolean> {

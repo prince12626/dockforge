@@ -9,13 +9,10 @@ export const authMiddleware = async (
 ) => {
   try {
     const headers = new Headers();
+    const cookie = req.get("cookie");
 
-    for (const [key, value] of Object.entries(req.headers)) {
-      if (typeof value === "string") {
-        headers.set(key, value);
-      } else if (Array.isArray(value)) {
-        headers.set(key, value.join(","));
-      }
+    if (cookie) {
+      headers.set("cookie", cookie);
     }
 
     const session = await auth.api.getSession({
@@ -31,11 +28,9 @@ export const authMiddleware = async (
     req.user = session.user;
 
     next();
-  } catch (error) {
-    console.log("[AUTH ERROR]", error);
-
-    return res.status(401).json({
-      message: "Invalid session",
+  } catch {
+    return res.status(500).json({
+      message: "Authentication service unavailable",
     });
   }
 };

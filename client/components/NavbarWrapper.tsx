@@ -1,6 +1,7 @@
 "use client";
 import { usePathname } from "next/navigation";
 import Navbar from "@/components/Navbar";
+import Footer from "./Footer";
 
 export default function NavbarWrapper({
   children,
@@ -14,6 +15,7 @@ export default function NavbarWrapper({
     <>
       {showNavbar && <Navbar />}
       {children}
+      {showNavbar && <Footer />}
     </>
   );
 }

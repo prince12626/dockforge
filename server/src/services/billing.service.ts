@@ -14,7 +14,7 @@ export const getBillingOverviewService = async (userId: string) => {
 
     Payment.find({ userId }).sort({ createdAt: -1 }).populate("planId"),
 
-    VPS.countDocuments({ userId }),
+    VPS.countDocuments({ userId, status: { $in: ["running", "stopped"] } }),
   ]);
   console.log(subscription);
   return {

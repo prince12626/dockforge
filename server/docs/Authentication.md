@@ -41,21 +41,23 @@ For the custom middleware, a successful authentication flow attaches the authent
 ## Error Responses
 
 - `401 Unauthorized`: no session was found.
-- `401 Invalid session`: an exception occurred while resolving the session.
+- `500 Authentication service unavailable`: Better Auth could not verify the session.
 
 ## Business Rules
 
-- Sessions are resolved from request headers using the Better Auth API.
-- The implementation expects authentication headers to be present in the request.
-- In production, the authentication configuration enables cross-subdomain cookies and secure cookies.
+- Sessions are resolved from the request cookie using the Better Auth API; a cookie's presence alone does not authenticate a request.
+- `BETTER_AUTH_URL` must be the backend origin and `CLIENT_URL` must be the exact frontend origin.
+- The frontend sends credentialed requests to the backend. CORS allows the configured `CLIENT_URL` with credentials.
+- In production, Better Auth enables secure cookies scoped to `.princechaurasiya.in` for cross-subdomain requests.
+- The frontend route proxy checks Better Auth's `/get-session` endpoint before redirecting between authentication and protected routes.
 
 ## Flow
 
 1. The request reaches `authMiddleware`.
-2. The middleware converts request headers into a `Headers` object.
+2. The middleware forwards the request cookie to Better Auth.
 3. It calls `auth.api.getSession`.
 4. If a session is found, `req.user` is populated.
-5. If not, the request is rejected with a `401` response.
+5. If no session is found, the request is rejected with `401`; if verification fails, the request returns `500`.
 
 ## Notes
 

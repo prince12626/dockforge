@@ -89,7 +89,8 @@ Yes.
 - A VPS can only be created by an authenticated user with an active subscription.
 - The number of VPS instances is limited by the active plan’s `maxVps` value.
 - Requested CPU, memory, and storage values are checked against the current plan limits.
-- The Docker image is resolved from the configured image key map.
+- The Docker image is resolved from the configured image key map. The `ubuntu-24` option uses the custom `dockforge-vps:24.04` image; build it on the backend's Docker host with `npm run build:vps-image` from `server/`.
+- Updating the image mapping affects newly created VPS instances only. Existing VPS instances are not recreated or deleted.
 - The created VPS record stores the container metadata and resource settings.
 
 ## Flow
