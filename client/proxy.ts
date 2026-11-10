@@ -1,17 +1,12 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-const protectedRoutes = ["/dashboard", "/admin"];
+const protectedRoutes = ["/dashboard"];
 const authRoutes = ["/login", "/register"];
-
-type AuthenticatedState = {
-  authenticated: boolean;
-  role: string | null;
-};
 
 async function getAuthenticatedState(
   req: NextRequest,
-): Promise<AuthenticatedState | null> {
+): Promise<boolean | null> {
   const apiURL = process.env.NEXT_PUBLIC_API_URL;
 
   if (!apiURL) return null;
@@ -20,7 +15,9 @@ async function getAuthenticatedState(
     const headers = new Headers();
     const cookie = req.headers.get("cookie");
 
-    if (cookie) headers.set("cookie", cookie);
+    if (cookie) {
+      headers.set("cookie", cookie);
+    }
 
     const response = await fetch(
       new URL("/api/v1/authentication/get-session", apiURL),
@@ -35,22 +32,15 @@ async function getAuthenticatedState(
     const session: unknown = await response.json();
 
     if (!session || typeof session !== "object") {
-      return { authenticated: false, role: null };
+      return false;
     }
 
     const data = session as {
       session?: { id?: string };
-      user?: { id?: string; role?: string };
+      user?: { id?: string };
     };
 
-    if (!data.session?.id || !data.user?.id) {
-      return { authenticated: false, role: null };
-    }
-
-    return {
-      authenticated: true,
-      role: data.user.role ?? null,
-    };
+    return Boolean(data.session?.id && data.user?.id);
   } catch {
     return null;
   }
@@ -62,49 +52,36 @@ function matchesRoute(pathname: string, routes: string[]) {
   );
 }
 
-function isAdmin(role: string | null) {
-  return role === "admin" || role === "superadmin";
-}
-
 export async function proxy(req: NextRequest) {
   const pathname = req.nextUrl.pathname;
 
   const isProtected = matchesRoute(pathname, protectedRoutes);
-  const isAdminRoute = matchesRoute(pathname, ["/admin"]);
   const isAuthRoute = matchesRoute(pathname, authRoutes);
 
   if (!isProtected && !isAuthRoute) {
     return NextResponse.next();
   }
 
-  const auth = await getAuthenticatedState(req);
+  const isAuthenticated = await getAuthenticatedState(req);
 
-  // Fail closed for protected routes when authentication cannot be verified.
-  if (auth === null) {
-    if (isProtected) {
-      return NextResponse.redirect(new URL("/login", req.url));
-    }
-
+  // Unknown authentication state: don't force a redirect.
+  if (isAuthenticated === null) {
     return NextResponse.next();
   }
 
-  if (isProtected && !auth.authenticated) {
+  // Unauthenticated users cannot access dashboard.
+  if (isProtected && !isAuthenticated) {
     return NextResponse.redirect(new URL("/login", req.url));
   }
 
-  if (isAdminRoute && auth.authenticated && !isAdmin(auth.role)) {
+  // Authenticated users shouldn't revisit login/register.
+  if (isAuthRoute && isAuthenticated) {
     return NextResponse.redirect(new URL("/dashboard", req.url));
-  }
-
-  if (isAuthRoute && auth.authenticated) {
-    return NextResponse.redirect(
-      new URL(isAdmin(auth.role) ? "/admin" : "/dashboard", req.url),
-    );
   }
 
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/admin/:path*", "/login", "/register"],
+  matcher: ["/dashboard/:path*", "/login", "/register"],
 };
