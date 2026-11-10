@@ -4,6 +4,7 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { AdminShell } from "@/components/admin/admin-shell";
+import { getServerSession } from "@/lib/get-server-session";
 
 export const metadata: Metadata = {
   title: {
@@ -14,59 +15,24 @@ export const metadata: Metadata = {
 };
 
 async function verifyAdmin() {
-  const apiURL = process.env.NEXT_PUBLIC_API_URL;
+  const cookie = (await headers()).get("cookie");
+  const result = await getServerSession(cookie);
 
-  if (!apiURL) {
-    throw new Error("NEXT_PUBLIC_API_URL is not configured");
+  console.log(
+    "[admin]",
+    result.state,
+    result.state === "authenticated" ? result.user.role : "",
+  );
+
+  // Fail closed, but loudly: an error page instead of a silent redirect loop.
+  if (result.state === "error") {
+    throw new Error(`Admin session check failed: ${result.reason}`);
   }
 
-  const requestHeaders = await headers();
-  const cookie = requestHeaders.get("cookie") ?? "";
+  if (result.state === "unauthenticated") redirect("/login");
 
-  try {
-    const response = await fetch(
-      `${apiURL}/api/v1/authentication/get-session`,
-      {
-        headers: { cookie },
-        cache: "no-store",
-      },
-    );
-
-    if (!response.ok) {
-      redirect("/login");
-    }
-
-    const session = await response.json();
-
-    console.log("[ADMIN DEBUG]", {
-      userId: session?.user?.id,
-      email: session?.user?.email,
-      role: session?.user?.role,
-    });
-    if (!session?.user) {
-      redirect("/login");
-    }
-
-    const role = session.user.role;
-
-    if (role !== "admin" && role !== "superadmin") {
-      redirect("/dashboard");
-    }
-  } catch (error) {
-    // Next.js redirect exceptions must not be swallowed.
-    if (
-      error &&
-      typeof error === "object" &&
-      "digest" in error &&
-      typeof error.digest === "string" &&
-      error.digest.startsWith("NEXT_REDIRECT")
-    ) {
-      throw error;
-    }
-
-    console.error("Admin authorization failed:", error);
-    redirect("/login");
-  }
+  const role = result.user.role;
+  if (role !== "admin" && role !== "superadmin") redirect("/dashboard");
 }
 
 export default async function AdminLayout({
