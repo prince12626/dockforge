@@ -9,31 +9,38 @@ async function getAuthenticatedState(
 ): Promise<boolean | null> {
   const apiURL = process.env.NEXT_PUBLIC_API_URL;
 
-  if (!apiURL) return null;
+  if (!apiURL) {
+    console.error("[proxy] NEXT_PUBLIC_API_URL is not set");
+    return null;
+  }
+
+  const cookie = req.headers.get("cookie");
+
+  // No cookies at all means there cannot be a session.
+  if (!cookie) return false;
 
   try {
-    const headers = new Headers();
-    const cookie = req.headers.get("cookie");
-
-    if (cookie) {
-      headers.set("cookie", cookie);
-    }
-
     const response = await fetch(
       new URL("/api/v1/authentication/get-session", apiURL),
       {
-        headers,
+        headers: { cookie },
         cache: "no-store",
+        signal: AbortSignal.timeout(3000),
       },
     );
 
-    if (!response.ok) return null;
+    // 401/403 = definitely not logged in.
+    if (response.status === 401 || response.status === 403) return false;
+
+    // Any other non-OK status = unknown state.
+    if (!response.ok) {
+      console.error("[proxy] get-session failed with status", response.status);
+      return null;
+    }
 
     const session: unknown = await response.json();
 
-    if (!session || typeof session !== "object") {
-      return false;
-    }
+    if (!session || typeof session !== "object") return false;
 
     const data = session as {
       session?: { id?: string };
@@ -41,7 +48,8 @@ async function getAuthenticatedState(
     };
 
     return Boolean(data.session?.id && data.user?.id);
-  } catch {
+  } catch (error) {
+    console.error("[proxy] get-session request error:", error);
     return null;
   }
 }
@@ -50,6 +58,13 @@ function matchesRoute(pathname: string, routes: string[]) {
   return routes.some(
     (route) => pathname === route || pathname.startsWith(`${route}/`),
   );
+}
+
+function redirectTo(req: NextRequest, pathname: string) {
+  const url = req.nextUrl.clone();
+  url.pathname = pathname;
+  url.search = "";
+  return NextResponse.redirect(url);
 }
 
 export async function proxy(req: NextRequest) {
@@ -64,19 +79,19 @@ export async function proxy(req: NextRequest) {
 
   const isAuthenticated = await getAuthenticatedState(req);
 
-  // Unknown authentication state: don't force a redirect.
+  console.log("[proxy]", pathname, "authenticated:", isAuthenticated);
+
+  // Unknown state: let the request through.
   if (isAuthenticated === null) {
     return NextResponse.next();
   }
 
-  // Unauthenticated users cannot access dashboard.
   if (isProtected && !isAuthenticated) {
-    return NextResponse.redirect(new URL("/login", req.url));
+    return redirectTo(req, "/login");
   }
 
-  // Authenticated users shouldn't revisit login/register.
   if (isAuthRoute && isAuthenticated) {
-    return NextResponse.redirect(new URL("/dashboard", req.url));
+    return redirectTo(req, "/dashboard");
   }
 
   return NextResponse.next();
